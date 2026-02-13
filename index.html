@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>گروه تحقیقاتی مواد و ساختارهای پیشرفته</title>
+    <style>
+        /* تنظیمات پایه و فونت */
+        body {
+            font-family: Tahoma, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.8;
+        }
+        
+        /* بخش هدر سایت */
+        header {
+            background: #003366; /* رنگ آبی آکادمیک */
+            color: #fff;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        header h1 { margin: 0; font-size: 24px; }
+        header p { margin-top: 10px; font-size: 16px; opacity: 0.8; }
+
+        /* منوی ناوبری */
+        nav {
+            display: flex;
+            justify-content: center;
+            background: #004080;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 20px;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        nav a:hover { color: #ffcc00; }
+
+        /* بدنه اصلی سایت */
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 30px;
+            background: #fff;
+            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        
+        section { margin-bottom: 40px; }
+        h2 { color: #003366; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        
+        /* کارت‌های زمینه‌های پژوهشی */
+        .research-areas {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .card {
+            flex: 1;
+            min-width: 280px;
+            background: #fdfdfd;
+            padding: 20px;
+            border-radius: 6px;
+            border-top: 4px solid #003366;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .card h3 { color: #004080; margin-top: 0; }
+
+        /* لیست‌ها */
+        ul { padding-right: 20px; }
+        li { margin-bottom: 10px; }
+
+        /* فوتر */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: #222;
+            color: #ccc;
+            margin-top: 50px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>گروه تحقیقاتی مکانیک و مواد مرکب</h1>
+        <p>دانشکده مهندسی - تحت سرپرستی دکتر [نام استاد]</p>
+    </header>
+
+    <nav>
+        <a href="#about">درباره گروه</a>
+        <a href="#research">زمینه‌های پژوهشی</a>
+        <a href="#members">اعضای گروه</a>
+        <a href="#contact">تماس با ما</a>
+    </nav>
+
+    <div class="container">
+        
+        <section id="about">
+            <h2>درباره گروه تحقیقاتی</h2>
+            <p>
+                گروه پژوهشی ما بر روی توسعه، تحلیل عددی و بهینه‌سازی ساختارهای نوین مهندسی تمرکز دارد. 
+                هدف اصلی ما ارتباط دادن مفاهیم تئوری، کدهای محاسباتی و مدل‌سازی‌های پیشرفته برای حل چالش‌های روز مهندسی مواد و مکانیک است.
+            </p>
+        </section>
+
+        <section id="research">
+            <h2>زمینه‌های پژوهشی اصلی</h2>
+            <div class="research-areas">
+                
+                <div class="card">
+                    <h3>پانل‌های ساندویچی</h3>
+                    <p>مطالعه و بهینه‌سازی پانل‌های ساندویچ کامپوزیتی با هسته‌های مختلف (از جمله مدل‌های لانه زنبوری) تحت انواع بارگذاری‌ها نظیر بارهای فشاری خارجی یکنواخت.</p>
+                </div>
+                
+                <div class="card">
+                    <h3>کامپوزیت‌های الهام‌گرفته از طبیعت</h3>
+                    <p>طراحی، استخراج داده‌ها و تحلیل ساختارهای کامپوزیتی هلیکوئیدال (Bio-inspired Helicoidal) برای افزایش چشمگیر مقاومت در برابر ضربه و آسیب.</p>
+                </div>
+                
+                <div class="card">
+                    <h3>مدل‌سازی محاسباتی</h3>
+                    <p>توسعه و دیباگ کدهای محاسباتی در محیط MATLAB و استفاده از روش‌های اجزاء محدود برای شبیه‌سازی دقیق رفتار مکانیکی سازه‌ها.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <section id="members">
+            <h2>پژوهشگران و دانشجویان</h2>
+            <ul>
+                <li><strong>دکتر [نام و نام خانوادگی]</strong> - سرپرست آزمایشگاه و عضو هیئت علمی</li>
+                <li><strong>دانشجویان کارشناسی ارشد:</strong> فعال در زمینه پایان‌نامه‌های بهینه‌سازی سازه و تحلیل داده</li>
+                <li><strong>دانشجویان دکتری:</strong> تمرکز بر روی توسعه مواد پیشرفته و چاپ مقالات ISI</li>
+            </ul>
+        </section>
+
+        <section id="contact">
+            <h2>تماس با ما</h2>
+            <p><strong>آدرس ایمیل:</strong> info@university.edu</p>
+            <p><strong>آدرس:</strong> [نام شهر]، [نام دانشگاه]، دانشکده مهندسی، طبقه [شماره]، اتاق [شماره]</p>
+        </section>
+
+    </div>
+
+    <footer>
+        <p>© 2026 گروه تحقیقاتی مواد پیشرفته. طراحی شده برای پلتفرم گیت‌هاب.</p>
+    </footer>
+
+</body>
+</html>
