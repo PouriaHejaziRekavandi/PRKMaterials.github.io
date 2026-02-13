@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="fa" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>گروه تحقیقاتی مواد و ساختارهای پیشرفته</title>
+    <title>Advanced Materials and Structures Research Group</title>
     <style>
-        /* تنظیمات پایه و فونت */
+        /* Base and Font Settings */
         body {
-            font-family: Tahoma, Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f7f6;
@@ -15,47 +15,49 @@
             line-height: 1.8;
         }
         
-        /* بخش هدر سایت */
+        /* Header */
         header {
             background: #003366;
             color: #fff;
-            padding: 2rem 0;
+            padding: 2.5rem 0;
             text-align: center;
         }
-        header h1 { margin: 0; font-size: 24px; }
-        header p { margin-top: 10px; font-size: 16px; opacity: 0.8; }
+        header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
+        header p { margin-top: 10px; font-size: 16px; opacity: 0.9; }
 
-        /* منوی ناوبری */
+        /* Navigation Menu */
         nav {
             display: flex;
             justify-content: center;
             background: #004080;
             padding: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
         }
         nav a {
             color: #fff;
             text-decoration: none;
-            margin: 0 15px;
+            margin: 0 20px;
             font-weight: bold;
             transition: color 0.3s;
         }
         nav a:hover { color: #ffcc00; }
 
-        /* بدنه اصلی سایت */
+        /* Main Container */
         .container {
             max-width: 1000px;
-            margin: 30px auto;
-            padding: 30px;
+            margin: 40px auto;
+            padding: 40px;
             background: #fff;
-            box-shadow: 0 0 15px rgba(0,0,0,0.05);
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
             border-radius: 8px;
         }
         
-        section { margin-bottom: 40px; }
+        section { margin-bottom: 50px; }
         h2 { color: #003366; border-bottom: 2px solid #eee; padding-bottom: 10px; }
         
-        /* کارت‌های زمینه‌های پژوهشی */
+        /* Research Cards */
         .research-areas {
             display: flex;
             gap: 20px;
@@ -66,14 +68,14 @@
             flex: 1;
             min-width: 280px;
             background: #fdfdfd;
-            padding: 20px;
+            padding: 25px;
             border-radius: 6px;
             border-top: 4px solid #003366;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .card h3 { color: #004080; margin-top: 0; }
 
-        /* تنظیمات بخش مقالات و دانلود */
+        /* Publications Section */
         .pub-list {
             display: flex;
             flex-direction: column;
@@ -85,14 +87,14 @@
             justify-content: space-between;
             align-items: center;
             background: #fdfdfd;
-            padding: 15px 20px;
-            border-right: 4px solid #008080;
+            padding: 15px 25px;
+            border-left: 4px solid #008080; /* Changed to left for English */
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
             border-radius: 4px;
         }
         .pub-info {
             flex: 1;
-            padding-left: 20px;
+            padding-right: 20px;
             font-size: 15px;
         }
         .pub-info strong {
@@ -114,14 +116,14 @@
             color: #333;
         }
 
-        /* لیست‌ها */
-        ul { padding-right: 20px; }
+        /* Lists */
+        ul { padding-left: 20px; }
         li { margin-bottom: 10px; }
 
-        /* فوتر */
+        /* Footer */
         footer {
             text-align: center;
-            padding: 20px;
+            padding: 25px;
             background: #222;
             color: #ccc;
             margin-top: 50px;
@@ -132,103 +134,98 @@
 <body>
 
     <header>
-        <h1>گروه تحقیقاتی مکانیک و مواد مرکب</h1>
-        <p>دانشکده مهندسی - تحت سرپرستی دکتر [نام استاد]</p>
+        <h1>Advanced Materials and Structures Research Group</h1>
+        <p>Department of Engineering | Directed by Dr. [Professor's Name]</p>
     </header>
 
     <nav>
-        <a href="#about">درباره گروه</a>
-        <a href="#research">زمینه‌های پژوهشی</a>
-        <a href="#publications">مقالات و انتشارات</a>
-        <a href="#members">اعضای گروه</a>
-        <a href="#contact">تماس با ما</a>
+        <a href="#about">About Us</a>
+        <a href="#research">Research Areas</a>
+        <a href="#publications">Publications</a>
+        <a href="#members">Team Members</a>
+        <a href="#contact">Contact</a>
     </nav>
 
     <div class="container">
         
         <section id="about">
-            <h2>درباره گروه تحقیقاتی</h2>
+            <h2>About the Research Group</h2>
             <p>
-                گروه پژوهشی ما بر روی توسعه، تحلیل عددی و بهینه‌سازی ساختارهای نوین مهندسی تمرکز دارد. 
-                هدف اصلی ما ارتباط دادن مفاهیم تئوری، کدهای محاسباتی و مدل‌سازی‌های پیشرفته برای حل چالش‌های روز مهندسی مواد و مکانیک است.
+                Our research group focuses on the development, numerical analysis, and optimization of novel engineering structures. 
+                Our main objective is to bridge theoretical concepts, computational codes, and advanced modeling to address contemporary challenges in materials and mechanical engineering.
             </p>
         </section>
 
         <section id="research">
-            <h2>زمینه‌های پژوهشی اصلی</h2>
+            <h2>Primary Research Areas</h2>
             <div class="research-areas">
                 
                 <div class="card">
-                    <h3>پانل‌های ساندویچی</h3>
-                    <p>مطالعه و بهینه‌سازی پانل‌های ساندویچ کامپوزیتی با هسته‌های مختلف (از جمله مدل‌های لانه زنبوری) تحت انواع بارگذاری‌ها نظیر بارهای فشاری خارجی یکنواخت.</p>
+                    <h3>Composite Sandwich Panels</h3>
+                    <p>Study and optimization of composite sandwich panels featuring various cores, specifically focusing on honeycomb configurations under uniform external compressive load.</p>
                 </div>
                 
                 <div class="card">
-                    <h3>کامپوزیت‌های الهام‌گرفته از طبیعت</h3>
-                    <p>طراحی، استخراج داده‌ها و تحلیل ساختارهای کامپوزیتی هلیکوئیدال (Bio-inspired Helicoidal) برای افزایش چشمگیر مقاومت در برابر ضربه و آسیب.</p>
+                    <h3>Bio-inspired Composites</h3>
+                    <p>Design, data extraction, and structural analysis of bio-inspired helicoidal composite structures to significantly enhance impact resistance and load-bearing capacity.</p>
                 </div>
                 
                 <div class="card">
-                    <h3>مدل‌سازی محاسباتی</h3>
-                    <p>توسعه و دیباگ کدهای محاسباتی در محیط MATLAB و استفاده از روش‌های اجزاء محدود برای شبیه‌سازی دقیق رفتار مکانیکی سازه‌ها.</p>
+                    <h3>Computational Modeling</h3>
+                    <p>Development and debugging of computational codes in MATLAB, alongside utilizing finite element methods for precise simulation of complex mechanical behaviors.</p>
                 </div>
 
             </div>
         </section>
 
         <section id="publications">
-            <h2>مقالات چاپ شده و انتشارات (Publications)</h2>
+            <h2>Publications & Projects</h2>
             <div class="pub-list">
                 
                 <div class="pub-item">
                     <div class="pub-info">
-                        <strong>مطالعه و بهینه‌سازی پانل ساندویچ کامپوزیتی با هسته‌های مختلف لانه زنبوری تحت بار فشاری</strong>
+                        <strong>Study and optimization of composite sandwich panels with different honeycomb cores under uniform external compressive load</strong>
                         <br>
-                        <em>مجله بین‌المللی مکانیک جامدات، ۲۰۲۵</em> - نویسندگان: [نام شما]، [نام استاد]
+                        <em>Master's Thesis / Journal of Solid Mechanics, 2026</em> - Authors: [Your Name], [Professor's Name]
                     </div>
-                    <a href="papers/paper1.pdf" target="_blank" class="download-btn">دانلود PDF</a>
+                    <a href="papers/paper1.pdf" target="_blank" class="download-btn">Download PDF</a>
                 </div>
 
                 <div class="pub-item">
                     <div class="pub-info">
-                        <strong>بررسی رفتار مکانیکی و استخراج داده‌های ساختارهای کامپوزیتی هلیکوئیدال الهام‌گرفته از طبیعت</strong>
+                        <strong>Mechanical behavior and data extraction of bio-inspired helicoidal composite structures</strong>
                         <br>
-                        <em>کنفرانس ملی مهندسی مواد و متالورژی، ۲۰۲۴</em> - نویسندگان: [نام شما]، [نام همکار]
+                        <em>International Conference on Materials Engineering, 2026</em> - Authors: [Your Name], [Colleague's Name]
                     </div>
-                    <a href="papers/paper2.pdf" target="_blank" class="download-btn">دانلود PDF</a>
-                </div>
-
-                <div class="pub-item">
-                    <div class="pub-info">
-                        <strong>توسعه کدهای محاسباتی در محیط MATLAB برای تحلیل المان محدود سازه‌های نوین</strong>
-                        <br>
-                        <em>فصلنامه علمی پژوهشی مهندسی مکانیک، ۲۰۲۳</em> - نویسندگان: [نام استاد]، [نام شما]
-                    </div>
-                    <a href="papers/paper3.pdf" target="_blank" class="download-btn">دانلود PDF</a>
+                    <a href="papers/paper2.pdf" target="_blank" class="download-btn">Download PDF</a>
                 </div>
 
             </div>
         </section>
 
         <section id="members">
-            <h2>پژوهشگران و دانشجویان</h2>
+            <h2>Researchers & Students</h2>
             <ul>
-                <li><strong>دکتر [نام و نام خانوادگی]</strong> - سرپرست آزمایشگاه و عضو هیئت علمی</li>
-                <li><strong>دانشجویان کارشناسی ارشد:</strong> فعال در زمینه پایان‌نامه‌های بهینه‌سازی سازه و تحلیل داده</li>
-                <li><strong>دانشجویان دکتری:</strong> تمرکز بر روی توسعه مواد پیشرفته و چاپ مقالات ISI</li>
+                <li><strong>Dr. [Full Name]</strong> - Principal Investigator and Faculty Member</li>
+                <li><strong>MSc Students:</strong> Focused on structural optimization and computational data analysis</li>
+                <li><strong>PhD Candidates:</strong> Developing advanced materials and high-impact ISI publications</li>
             </ul>
         </section>
 
         <section id="contact">
-            <h2>تماس با ما</h2>
-            <p><strong>آدرس ایمیل:</strong> info@university.edu</p>
-            <p><strong>آدرس:</strong> [نام شهر]، [نام دانشگاه]، دانشکده مهندسی، طبقه [شماره]، اتاق [شماره]</p>
+            <h2>Contact Information</h2>
+            <p><strong>Email:</strong> info@university.edu</p>
+            <p><strong>Address:</strong> [City Name], [University Name], Department of Engineering, Floor [Number], Room [Number]</p>
+            <p>
+                <strong>University Website:</strong> 
+                <a href="https://www.google.com" target="_blank">Visit official university page</a>
+            </p>
         </section>
 
     </div>
 
     <footer>
-        <p>© 2026 گروه تحقیقاتی. طراحی شده برای پلتفرم گیت‌هاب.</p>
+        <p>© 2026 Advanced Materials Research Group. Hosted on GitHub Pages.</p>
     </footer>
 
 </body>
