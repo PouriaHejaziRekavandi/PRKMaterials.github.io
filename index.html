@@ -5,130 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Materials and Structures Research Group</title>
     <style>
-        /* Base and Font Settings */
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f7f6;
-            color: #333;
-            line-height: 1.8;
-        }
-        
-        /* Header */
-        header {
-            background: #003366;
-            color: #fff;
-            padding: 2.5rem 0;
-            text-align: center;
-        }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; line-height: 1.8; }
+        header { background: #003366; color: #fff; padding: 2.5rem 0; text-align: center; }
         header h1 { margin: 0; font-size: 28px; letter-spacing: 1px; }
         header p { margin-top: 10px; font-size: 16px; opacity: 0.9; }
-
-        /* Navigation Menu */
-        nav {
-            display: flex;
-            justify-content: center;
-            background: #004080;
-            padding: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-        }
-        nav a {
-            color: #fff;
-            text-decoration: none;
-            margin: 0 20px;
-            font-weight: bold;
-            transition: color 0.3s;
-        }
+        nav { display: flex; justify-content: center; background: #004080; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; }
+        nav a { color: #fff; text-decoration: none; margin: 0 20px; font-weight: bold; transition: color 0.3s; }
         nav a:hover { color: #ffcc00; }
-
-        /* Main Container */
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 40px;
-            background: #fff;
-            box-shadow: 0 0 20px rgba(0,0,0,0.05);
-            border-radius: 8px;
-        }
-        
+        .container { max-width: 1000px; margin: 40px auto; padding: 40px; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.05); border-radius: 8px; min-height: 400px; }
         section { margin-bottom: 50px; }
         h2 { color: #003366; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        
-        /* Research Cards */
-        .research-areas {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-        .card {
-            flex: 1;
-            min-width: 280px;
-            background: #fdfdfd;
-            padding: 25px;
-            border-radius: 6px;
-            border-top: 4px solid #003366;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .card h3 { color: #004080; margin-top: 0; }
-
-        /* Publications Section */
-        .pub-list {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .pub-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fdfdfd;
-            padding: 15px 25px;
-            border-left: 4px solid #008080; /* Changed to left for English */
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            border-radius: 4px;
-        }
-        .pub-info {
-            flex: 1;
-            padding-right: 20px;
-            font-size: 15px;
-        }
-        .pub-info strong {
-            color: #003366;
-            font-size: 16px;
-        }
-        .download-btn {
-            background-color: #004080;
-            color: #fff;
-            padding: 8px 15px;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 14px;
-            transition: background 0.3s;
-            white-space: nowrap;
-        }
-        .download-btn:hover {
-            background-color: #ffcc00;
-            color: #333;
-        }
-
-        /* Lists */
-        ul { padding-left: 20px; }
-        li { margin-bottom: 10px; }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            padding: 25px;
-            background: #222;
-            color: #ccc;
-            margin-top: 50px;
-            font-size: 14px;
-        }
+        footer { text-align: center; padding: 25px; background: #222; color: #ccc; margin-top: 50px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -139,89 +26,19 @@
     </header>
 
     <nav>
-        <a href="#about">About Us</a>
-        <a href="#research">Research Areas</a>
-        <a href="#publications">Publications</a>
-        <a href="#members">Team Members</a>
-        <a href="#contact">Contact</a>
+        <a href="index.html">Home / About Us</a>
+        <a href="research.html" target="_blank">Research Areas</a>
+        <a href="publications.html" target="_blank">Publications</a>
     </nav>
 
     <div class="container">
-        
         <section id="about">
-            <h2>About the Research Group</h2>
+            <h2>Welcome to Our Research Group</h2>
             <p>
                 Our research group focuses on the development, numerical analysis, and optimization of novel engineering structures. 
                 Our main objective is to bridge theoretical concepts, computational codes, and advanced modeling to address contemporary challenges in materials and mechanical engineering.
             </p>
         </section>
-
-        <section id="research">
-            <h2>Primary Research Areas</h2>
-            <div class="research-areas">
-                
-                <div class="card">
-                    <h3>Composite Sandwich Panels</h3>
-                    <p>Study and optimization of composite sandwich panels featuring various cores, specifically focusing on honeycomb configurations under uniform external compressive load.</p>
-                </div>
-                
-                <div class="card">
-                    <h3>Bio-inspired Composites</h3>
-                    <p>Design, data extraction, and structural analysis of bio-inspired helicoidal composite structures to significantly enhance impact resistance and load-bearing capacity.</p>
-                </div>
-                
-                <div class="card">
-                    <h3>Computational Modeling</h3>
-                    <p>Development and debugging of computational codes in MATLAB, alongside utilizing finite element methods for precise simulation of complex mechanical behaviors.</p>
-                </div>
-
-            </div>
-        </section>
-
-        <section id="publications">
-            <h2>Publications & Projects</h2>
-            <div class="pub-list">
-                
-                <div class="pub-item">
-                    <div class="pub-info">
-                        <strong>Study and optimization of composite sandwich panels with different honeycomb cores under uniform external compressive load</strong>
-                        <br>
-                        <em>Master's Thesis / Journal of Solid Mechanics, 2026</em> - Authors: [Your Name], [Professor's Name]
-                    </div>
-                    <a href="papers/paper1.pdf" target="_blank" class="download-btn">Download PDF</a>
-                </div>
-
-                <div class="pub-item">
-                    <div class="pub-info">
-                        <strong>Mechanical behavior and data extraction of bio-inspired helicoidal composite structures</strong>
-                        <br>
-                        <em>International Conference on Materials Engineering, 2026</em> - Authors: [Your Name], [Colleague's Name]
-                    </div>
-                    <a href="papers/paper2.pdf" target="_blank" class="download-btn">Download PDF</a>
-                </div>
-
-            </div>
-        </section>
-
-        <section id="members">
-            <h2>Researchers & Students</h2>
-            <ul>
-                <li><strong>Dr. [Full Name]</strong> - Principal Investigator and Faculty Member</li>
-                <li><strong>MSc Students:</strong> Focused on structural optimization and computational data analysis</li>
-                <li><strong>PhD Candidates:</strong> Developing advanced materials and high-impact ISI publications</li>
-            </ul>
-        </section>
-
-        <section id="contact">
-            <h2>Contact Information</h2>
-            <p><strong>Email:</strong> info@university.edu</p>
-            <p><strong>Address:</strong> [City Name], [University Name], Department of Engineering, Floor [Number], Room [Number]</p>
-            <p>
-                <strong>University Website:</strong> 
-                <a href="https://www.google.com" target="_blank">Visit official university page</a>
-            </p>
-        </section>
-
     </div>
 
     <footer>
