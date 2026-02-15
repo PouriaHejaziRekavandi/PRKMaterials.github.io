@@ -3,98 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RKV Materials</title>
+    <title>SOMETHING WEIRD...</title>
     <style>
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; line-height: 1.8; }
-        
+        /* تنظیمات کلی و فونت */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+        body {
+            background-color: #050505; /* مشکی خیلی تیره */
+            color: #e0e0e0;
+            font-family: 'Roboto Mono', monospace; /* فونت شبیه کدنویسی */
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* استایل هدر و انیمیشن تایپ */
         header {
-            background-color: #003366;
-            /* تصویر پس‌زمینه هدر */
-            background-image: linear-gradient(rgba(0, 51, 102, 0.85), rgba(0, 51, 102, 0.85)), url('header-bg.jpg');
-            background-size: cover;
-            background-position: center;
-            color: #fff;
-            padding: 4rem 0;
+            background: #000;
+            padding: 5rem 1rem;
             text-align: center;
+            border-bottom: 2px solid #00ff41; /* خط نئون سبز */
+            position: relative;
         }
-        header h1 { margin: 0; font-size: 32px; letter-spacing: 1px; }
-        header p { margin-top: 10px; font-size: 16px; opacity: 0.9; }
-        
-        /* تنظیمات جدید برای منوی طولانی‌تر */
-        nav { 
-            display: flex; 
-            justify-content: center; 
-            background: #004080; 
-            padding: 15px; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1); 
-            position: sticky; 
-            top: 0; 
+
+        h1 {
+            font-family: 'Orbitron', sans-serif; /* فونت فضایی */
+            font-size: 2.5rem;
+            color: #00ff41; /* رنگ سبز هکری */
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
+            margin: 0;
+            display: inline-block;
+            overflow: hidden; /* مخفی کردن متن برای انیمیشن */
+            border-right: .15em solid #00ff41; /* نشانگر تایپ */
+            white-space: nowrap;
+            letter-spacing: 2px;
+            animation: typing 3.5s steps(30, end), blink-caret .75s step-end infinite;
+            max-width: 100%;
+        }
+
+        @keyframes typing { from { width: 0 } to { width: 100% } }
+        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #00ff41; } }
+
+        header p {
+            color: #00b8ff; /* آبی نئونی */
+            margin-top: 15px;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        /* نوار منو */
+        nav {
+            display: flex;
+            justify-content: center;
+            background: rgba(10, 10, 10, 0.95);
+            padding: 15px;
+            position: sticky;
+            top: 0;
             z-index: 100;
-            flex-wrap: wrap; /* اگر صفحه کوچک بود، منو به خط بعد برود */
+            flex-wrap: wrap;
+            border-bottom: 1px solid #333;
+            backdrop-filter: blur(5px);
         }
-        nav a { 
-            color: #fff; 
-            text-decoration: none; 
-            margin: 5px 15px; /* کمی فاصله عمودی هم دادیم */
-            font-weight: bold; 
-            transition: color 0.3s; 
-            white-space: nowrap; /* جلوگیری از شکستن متن دکمه‌ها */
+
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin: 8px 15px;
+            font-weight: bold;
+            font-size: 14px;
+            position: relative;
+            transition: 0.3s;
+            text-transform: uppercase;
         }
-        nav a:hover { color: #ffcc00; }
-        
-        .container { max-width: 1000px; margin: 40px auto; padding: 40px; background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.05); border-radius: 8px; min-height: 400px; }
-        h2 { color: #003366; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        
-        /* استایل‌های مربوط به عکس و بیوگرافی */
-        .profile-section { display: flex; align-items: flex-start; gap: 30px; margin-top: 20px; }
-        .profile-pic { width: 220px; height: 280px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); border: 3px solid #003366; flex-shrink: 0; }
-        .about-text { flex: 1; text-align: justify; }
-        
-        footer { text-align: center; padding: 25px; background: #222; color: #ccc; margin-top: 50px; font-size: 14px; }
-        
-        /* برای موبایل */
-        @media (max-width: 768px) { .profile-section { flex-direction: column; align-items: center; } }
+
+        /* افکت هاور منو */
+        nav a:hover {
+            color: #00ff41;
+            text-shadow: 0 0 8px #00ff41;
+        }
+        nav a::after {
+            content: '';
+            display: block;
+            width: 0;
+            height: 2px;
+            background: #00ff41;
+            transition: width .3s;
+        }
+        nav a:hover::after { width: 100%; }
+
+        /* کانتینر اصلی */
+        .container {
+            max-width: 1100px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        /* بخش پروفایل */
+        .profile-section {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            background: rgba(255, 255, 255, 0.05); /* شیشه‌ای تاریک */
+            padding: 40px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.05);
+            transition: transform 0.3s;
+        }
+
+        .profile-section:hover {
+            transform: scale(1.01);
+            border-color: #00b8ff;
+            box-shadow: 0 0 30px rgba(0, 184, 255, 0.2);
+        }
+
+        .profile-pic {
+            width: 250px;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 50%; /* دایره‌ای */
+            border: 4px solid #00b8ff;
+            box-shadow: 0 0 20px rgba(0, 184, 255, 0.5);
+            filter: grayscale(20%); /* کمی سیاه و سفید برای حس مرموز */
+            transition: 0.5s;
+        }
+
+        .profile-pic:hover {
+            filter: grayscale(0%);
+            transform: rotate(5deg);
+        }
+
+        .about-text h2 {
+            color: #fff;
+            border-bottom: 2px solid #00ff41;
+            display: inline-block;
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+
+        .about-text p {
+            line-height: 1.8;
+            font-size: 1.05rem;
+            color: #ccc;
+        }
+
+        strong { color: #00ff41; }
+
+        /* فوتر */
+        footer {
+            text-align: center;
+            padding: 30px;
+            background: #000;
+            color: #555;
+            font-size: 12px;
+            border-top: 1px solid #222;
+            margin-top: 50px;
+        }
+
+        /* رسپانسیو برای موبایل */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.2rem; white-space: normal; border: none; animation: none;} /* در موبایل انیمیشن تایپ سخت است */
+            .profile-section { flex-direction: column; text-align: center; }
+            .profile-pic { width: 180px; height: 180px; }
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>RKV Materials</h1>
-        <p>Directed by Pouria Hejazi Rekavandi</p>
+        <h1>SOMETHING WEIRD IS DISCOVERING</h1>
+        <p>[ System Status: Online | User: Pouria_RKV ]</p>
     </header>
 
     <nav>
-        <a href="index.html" target="_blank">Home</a>
-        <a href="about.html" target="_blank">About Us</a>
-        <a href="equipment.html" target="_blank">Lab Equipment</a>
-        <a href="research.html" target="_blank">Research Areas</a>
+        <a href="index.html">Home</a>
+        <a href="about.html" target="_blank">About</a>
+        <a href="equipment.html" target="_blank">Lab Gear</a>
+        <a href="abaqus.html" target="_blank">Abaqus_Sims</a>
+        <a href="research.html" target="_blank">Research_Data</a>
+        <a href="studied.html" target="_blank">Literature_Review</a>
         <a href="publications.html" target="_blank">Publications</a>
-        <a href="future.html" target="_blank">Future Research</a>
-        <a href="contact.html" target="_blank">Contact</a>
+        <a href="future.html" target="_blank">Future_Plans</a>
+        <a href="contact.html" target="_blank">Connect</a>
     </nav>
 
     <div class="container">
-        <section id="about">
-            <h2>Welcome to RKV Materials</h2>
-            <div class="profile-section">
-                
-                <img src="profile.jpg" alt="Pouria Hejazi Rekavandi" class="profile-pic">
-                
-                <div class="about-text">
-                    <p>
-                        Welcome to the official page of <strong>Pouria Hejazi Rekavandi</strong>. 
-                        Our research group focuses on the development, numerical analysis, and optimization of novel engineering structures. 
-                    </p>
-                    <p>
-                        Our main objective is to bridge theoretical concepts, computational codes, and advanced modeling to address contemporary challenges in materials and mechanical engineering, including the study of composite sandwich panels and bio-inspired helicoidal structures.
-                    </p>
-                </div>
+        <div class="profile-section">
+            
+            <img src="profile.jpg" alt="Pouria Hejazi Rekavandi" class="profile-pic">
+            
+            <div class="about-text">
+                <h2>// IDENTITY CONFIRMED</h2>
+                <p>
+                    Target identified: <strong>Pouria Hejazi Rekavandi</strong>. 
+                    <br>
+                    Mission: Unlocking the secrets of <strong>Composite Structures</strong> and numerical simulations.
+                </p>
+                <p>
+                    We operate at the intersection of theoretical mechanics and computational chaos. From optimizing honeycomb cores to bio-inspired designs, we are engineering the future.
+                    <br><br>
+                    <span style="color: #00b8ff;">> Initializing Abaqus solvers...</span>
+                    <br>
+                    <span style="color: #00b8ff;">> Loading material properties...</span>
+                </p>
             </div>
-        </section>
+        </div>
     </div>
 
     <footer>
-        <p>© 2026 RKV Materials. Hosted on GitHub Pages.</p>
+        <p>SYSTEM SECURE. © 2026 RKV MATERIALS. ENCRYPTED CONNECTION.</p>
     </footer>
 
 </body>
