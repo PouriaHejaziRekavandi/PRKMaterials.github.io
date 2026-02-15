@@ -6,7 +6,16 @@
     <title>RKV Materials</title>
     <style>
         body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; color: #333; line-height: 1.8; }
-        header { background: #003366; color: #fff; padding: 2.5rem 0; text-align: center; }
+        header {
+        background-color: #003366;
+        /* مطمئن شوید عکس header-bg.jpg را آپلود کرده‌اید */
+        background-image: linear-gradient(rgba(0, 51, 102, 0.85), rgba(0, 51, 102, 0.85)), url('header-bg.jpg');
+        background-size: cover;
+        background-position: center;
+        color: #fff;
+        padding: 4rem 0;
+        text-align: center;
+    }
         header h1 { margin: 0; font-size: 32px; letter-spacing: 1px; }
         header p { margin-top: 10px; font-size: 16px; opacity: 0.9; }
         nav { display: flex; justify-content: center; background: #004080; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;}
