@@ -32,6 +32,8 @@
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            will-change: transform;
             /* عکس شما اینجا لود می‌شود */
             background: url('header-bg.jpg') no-repeat center center;
             background-size: cover;
@@ -114,6 +116,8 @@
             height: 2px;
             background: #00ff41;
             transition: width .3s;
+            pointer-events: none;
+            will-change: transform;
         }
         nav a:hover::after { width: 100%; }
 
@@ -148,6 +152,8 @@
             animation: scanline 3s infinite linear;
             opacity: 0.3;
             box-shadow: 0 0 10px #00ff41;
+            pointer-events: none;
+            will-change: transform;
         }
 
         @keyframes scanline {
@@ -220,14 +226,14 @@
 
     <nav>
         <a href="index.html">Home</a>
-        <a href="about.html" target="_blank">About</a>
-        <a href="equipment.html" target="_blank">Lab Gear</a>
-        <a href="abaqus.html" target="_blank">Abaqus_Sims</a>
-        <a href="research.html" target="_blank">Research_Data</a>
-        <a href="studied.html" target="_blank">Literature_Review</a>
-        <a href="publications.html" target="_blank">Publications</a>
-        <a href="future.html" target="_blank">Future_Plans</a>
-        <a href="contact.html" target="_blank">Connect</a>
+        <a href="about.html" target="_blank" rel="noopener noreferrer">About</a>
+        <a href="equipment.html" target="_blank" rel="noopener noreferrer">Lab Gear</a>
+        <a href="abaqus.html" target="_blank" rel="noopener noreferrer">Abaqus_Sims</a>
+        <a href="research.html" target="_blank" rel="noopener noreferrer">Research_Data</a>
+        <a href="studied.html" target="_blank" rel="noopener noreferrer">Literature_Review</a>
+        <a href="publications.html" target="_blank" rel="noopener noreferrer">Publications</a>
+        <a href="future.html" target="_blank" rel="noopener noreferrer">Future_Plans</a>
+        <a href="contact.html" target="_blank" rel="noopener noreferrer">Connect</a>
     </nav>
 
     <div class="container">

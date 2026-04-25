@@ -1,6 +1,7 @@
 import os
 import gc
 import shutil
+import joblib
 import numpy as np
 import mne
 import tensorflow as tf
@@ -79,18 +80,8 @@ def median_mad(data):
     mad = np.median(np.abs(arr - med))
     return med, mad
 
-def initialize_pipeline():
-    logging.info("Initializing Forward Models...")
-    info = get_info(sfreq=100)
-    fwd = create_forward_model(info=info, sampling='ico4')
-
-    # Setup AGM for testing (avoiding Inverse Crime)
-    info_test = info.copy()
-    for i in range(len(info_test['chs'])):
-        info_test['chs'][i]['loc'][:3] += np.random.normal(0, 0.002, 3)
-
-    # FIXED: Changed 'oct3' to 'ico4' so the source space dimensions match the training data for MSE calculation
-    fwd_test = create_forward_model(info=info_test, sampling='ico4')
+def initialize_pipeline(checkpoints_dir):
+    cache_file = os.path.join(checkpoints_dir, 'pipeline_cache.pkl')
 
     # Simulation settings
     sim_settings = {
@@ -99,15 +90,51 @@ def initialize_pipeline():
         'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
     }
 
-    # Precompute Leadfields and Neighbors
-    fwd_gm = mne.convert_forward_solution(fwd, force_fixed=True, surf_ori=True, use_cps=True)
-    pos_gm = np.vstack([s['rr'][s['vertno']] for s in fwd_gm['src']]) * 1000
-    neighbors = []
-    adj = mne.spatial_src_adjacency(fwd_gm['src']).tocsr()
-    for i in range(adj.shape[0]):
-        neighbors.append(adj.indices[adj.indptr[i]:adj.indptr[i+1]])
+    if os.path.exists(cache_file):
+        logging.info("Loading cached pipeline objects...")
+        cache_data = joblib.load(cache_file)
+        info = cache_data['info']
+        fwd = cache_data['fwd']
+        info_test = cache_data['info_test']
+        fwd_test = cache_data['fwd_test']
+        pos_gm = cache_data['pos_gm']
+        neighbors = cache_data['neighbors']
+    else:
+        logging.info("Initializing Forward Models...")
+        os.makedirs(checkpoints_dir, exist_ok=True)
+
+        info = get_info(sfreq=100)
+        fwd = create_forward_model(info=info, sampling='ico4')
+
+        # Setup AGM for testing (avoiding Inverse Crime)
+        info_test = info.copy()
+        for i in range(len(info_test['chs'])):
+            info_test['chs'][i]['loc'][:3] += np.random.normal(0, 0.002, 3)
+
+        # FIXED: Changed 'oct3' to 'ico4' so the source space dimensions match the training data for MSE calculation
+        fwd_test = create_forward_model(info=info_test, sampling='ico4')
+
+        # Precompute Leadfields and Neighbors
+        fwd_gm = mne.convert_forward_solution(fwd, force_fixed=True, surf_ori=True, use_cps=True)
+        pos_gm = np.vstack([s['rr'][s['vertno']] for s in fwd_gm['src']]) * 1000
+        neighbors = []
+        adj = mne.spatial_src_adjacency(fwd_gm['src']).tocsr()
+        for i in range(adj.shape[0]):
+            neighbors.append(adj.indices[adj.indptr[i]:adj.indptr[i+1]])
+
+        # Cache the objects
+        logging.info("Caching pipeline objects...")
+        joblib.dump({
+            'info': info,
+            'fwd': fwd,
+            'info_test': info_test,
+            'fwd_test': fwd_test,
+            'pos_gm': pos_gm,
+            'neighbors': neighbors,
+        }, cache_file)
 
     # Create the Network once
+    # Note: Keras models should NOT be pickled using joblib.
     net = Net(fwd, model_type='convdip')
 
     return info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net
@@ -276,7 +303,7 @@ def save_and_load_data(y_true, y_pred, mle_l, mse_l, nmse_l, auc_l, found_l):
 def main():
     checkpoints_dir = setup_environment()
 
-    info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net = initialize_pipeline()
+    info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net = initialize_pipeline(checkpoints_dir)
 
     all_loss, all_val_loss = train_model(
         net, fwd, info, sim_settings, checkpoints_dir,
