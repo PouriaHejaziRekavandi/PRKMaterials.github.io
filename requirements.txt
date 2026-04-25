@@ -1,0 +1,11 @@
+esinet
+mne
+tensorflow
+scipy
+scikit-learn
+matplotlib
+seaborn
+joblib
+pyvistaqt
+pyvista
+PyQt6
