@@ -2,3 +2,6 @@ script.log
 *.png
 *.npz
 checkpoints/
+__pycache__/
+*.pyc
+esinet_project_local/
