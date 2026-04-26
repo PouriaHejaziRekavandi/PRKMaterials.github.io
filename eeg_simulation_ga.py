@@ -111,9 +111,12 @@ class GeneticOptimizer:
         net = Net(self.fwd, model_type='convdip')
 
         try:
+            # Early stopping to speed up optimization phase
+            early_stop = tf.keras.callbacks.EarlyStopping(
+                monitor='loss', patience=5, restore_best_weights=True)
+
             # We use a fixed learning rate for GA to focus on epochs as requested
-            # but we could also optimize it if needed.
-            net.fit(train_sim, epochs=epochs, validation_split=0.0)
+            net.fit(train_sim, epochs=epochs, validation_split=0.0, callbacks=[early_stop])
             y_true = val_sim.source_data
             y_pred = net.predict(val_sim)
 
@@ -137,15 +140,17 @@ class GeneticOptimizer:
             gc.collect()
 
     def optimize(self, n_samples):
-        logging.info(f"Starting GA optimization for sample size: {n_samples}")
+        # Optimization: Use a smaller subset for GA to find the epoch trend faster
+        ga_samples = min(n_samples, 5000)
+        logging.info(f"Starting GA optimization using {ga_samples} samples (subset of {n_samples})")
 
         # Simulate data once for all individuals in this generation
         train_sim = Simulation(self.fwd, self.info, settings=self.sim_settings)
-        train_sim.simulate(n_samples=n_samples)
+        train_sim.simulate(n_samples=ga_samples)
 
         val_sim = Simulation(self.fwd, self.info, settings=self.sim_settings)
         # Use a reasonable size for validation during GA to save time
-        val_samples = min(200, max(50, n_samples // 10))
+        val_samples = min(200, max(50, ga_samples // 10))
         val_sim.simulate(n_samples=val_samples)
 
         # Initialize population: [epochs]
@@ -189,7 +194,7 @@ class GeneticOptimizer:
             population = new_population
 
         logging.info(f"Best epochs found for {n_samples} samples: {int(best_ind[0])} (MLE: {best_mle:.2f})")
-        return int(best_ind[0]), train_sim
+        return int(best_ind[0])
 
 def run_simulation():
     info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors = initialize_pipeline()
@@ -197,13 +202,6 @@ def run_simulation():
     sample_sizes = [1000, 2000, 5000, 10000, 50000, 100000]
 
     # Updated results directory for rclone mount in Google Colab
-    # Ensure you have setup rclone and mounted OneDrive to /content/onedrive
-    # Setup commands (run in a Colab cell):
-    # 1. !apt-get install rclone
-    # 2. !rclone config  (setup your 'onedrive' remote)
-    # 3. !mkdir /content/onedrive
-    # 4. !rclone mount onedrive: /content/onedrive --vfs-cache-mode full &
-
     results_dir = '/content/onedrive/Documents/EEG'
 
     # Fallback to local directory if rclone mount is not active
@@ -222,7 +220,7 @@ def run_simulation():
     for n in sample_sizes:
         logging.info(f"\n{'='*30}\nPROCESSING SAMPLE SIZE: {n}\n{'='*30}")
 
-        # Adjust population and generations based on sample size to keep it feasible
+        # GA Phase: Find optimal epochs using a small data subset to save time
         if n <= 5000:
             pop_size, gens = 6, 3
         elif n <= 10000:
@@ -232,15 +230,25 @@ def run_simulation():
 
         optimizer = GeneticOptimizer(fwd, info, pos_gm, neighbors, sim_settings,
                                      population_size=pop_size, generations=gens)
-        best_epochs, train_sim = optimizer.optimize(n)
+        best_epochs = optimizer.optimize(n)
 
-        # Save simulation data as requested
+        # Final Training Phase: Use full dataset with best parameters + EarlyStopping
+        logging.info(f"Simulating full dataset of {n} samples...")
+        train_sim = Simulation(fwd, info, settings=sim_settings)
+        train_sim.simulate(n_samples=n)
+
+        # Save simulation data
         joblib.dump(train_sim, os.path.join(results_dir, f'sim_chunk_{n}.pkl'))
 
-        # Final training with best parameters
         logging.info(f"Training final model for size {n} with {best_epochs} epochs...")
         net = Net(fwd, model_type='convdip')
-        history = net.fit(train_sim, epochs=best_epochs, validation_split=0.1)
+
+        # Add EarlyStopping for final training to avoid redundant computation
+        early_stop_final = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss', patience=10, restore_best_weights=True)
+
+        history = net.fit(train_sim, epochs=best_epochs, validation_split=0.1,
+                          callbacks=[early_stop_final])
 
         # Plot training curve for this run
         plt.figure(figsize=(10, 5))
