@@ -46,9 +46,12 @@ def to_array(x):
 def multisource_metrics(gt, pr, pos_mm, neighbors):
     def get_local_maxima(vec):
         vec = vec.ravel()
+        if vec.size == 0:
+            return np.array([], dtype=int)
+
         gmax = np.max(vec)
         if gmax <= 0: return np.array([np.argmax(vec)])
-        cand = [i for i in range(len(vec)) if len(neighbors[i]) > 0 and np.all(vec[i] > vec[neighbors[i]])]
+        cand = [i for i in range(len(vec)) if i < len(neighbors) and len(neighbors[i]) > 0 and np.all(vec[i] > vec[neighbors[i]])]
         if not cand: return np.array([np.argmax(vec)])
         cand = sorted(cand, key=lambda i: vec[i], reverse=True)
         selected = []
@@ -61,7 +64,14 @@ def multisource_metrics(gt, pr, pos_mm, neighbors):
 
     gt_max = get_local_maxima(gt)
     pr_max = get_local_maxima(pr)
+
+    if gt_max.size == 0 or pr_max.size == 0:
+        return 100.0, 0.0 # Return high error if no sources found
+
     D = cdist(pos_mm[gt_max], pos_mm[pr_max])
+    if D.size == 0:
+        return 100.0, 0.0
+
     min_d = D.min(axis=1)
     return np.mean(min_d), np.mean(min_d <= 30.0) * 100
 
@@ -124,6 +134,12 @@ class GeneticOptimizer:
             for i in range(len(y_true)):
                 jt = to_array(y_true[i])[:, 0]
                 jp = to_array(y_pred[i])[:, 0]
+
+                if jt.size == 0 or jp.size == 0:
+                    logging.warning(f"Empty data encountered at index {i}: jt shape {jt.shape}, jp shape {jp.shape}")
+                    mle_list.append(100.0)
+                    continue
+
                 mle, _ = multisource_metrics(np.abs(jt), np.abs(jp), self.pos_gm, self.neighbors)
                 mle_list.append(mle)
 
