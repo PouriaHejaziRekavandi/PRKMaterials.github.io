@@ -196,19 +196,19 @@ def run_simulation():
 
     sample_sizes = [1000, 2000, 5000, 10000, 50000, 100000]
 
-    # Updated results directory for SharePoint/OneDrive synchronization
-    # The OneDrive root is at C:\Users\PouriaRK\OneDrive - University of Toledo
-    results_dir = r'C:\Users\PouriaRK\OneDrive - University of Toledo\EEG'
+    # Updated results directory for rclone mount in Google Colab
+    # Ensure you have setup rclone and mounted OneDrive to /content/onedrive
+    # Setup commands (run in a Colab cell):
+    # 1. !apt-get install rclone
+    # 2. !rclone config  (setup your 'onedrive' remote)
+    # 3. !mkdir /content/onedrive
+    # 4. !rclone mount onedrive: /content/onedrive --vfs-cache-mode full &
 
-    # Fallback check: sometimes synced folders are inside a 'Documents' subfolder
-    if not os.path.exists(os.path.dirname(results_dir)):
-        alt_path = r'C:\Users\PouriaRK\OneDrive - University of Toledo\Documents\EEG'
-        if os.path.exists(os.path.dirname(alt_path)):
-            results_dir = alt_path
+    results_dir = '/content/onedrive/EEG'
 
-    # Final fallback to local directory if neither OneDrive path is accessible
-    if not os.path.exists(os.path.dirname(results_dir)):
-        logging.warning(f"OneDrive path not found. Falling back to local results directory.")
+    # Fallback to local directory if rclone mount is not active
+    if not os.path.exists('/content/onedrive'):
+        logging.warning(f"rclone mount not found at /content/onedrive. Falling back to local results directory.")
         results_dir = 'esinet_project_results'
 
     os.makedirs(results_dir, exist_ok=True)
