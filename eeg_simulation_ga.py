@@ -16,18 +16,13 @@ import seaborn as sns
 # Install dependencies if not already installed
 try:
     import mne
-except ImportError:
-    print("Installing mne...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "mne"])
-    import mne
-
-try:
     import esinet
     from esinet import Simulation, Net
     from esinet.forward import create_forward_model, get_info
 except ImportError:
-    print("Installing esinet...")
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "esinet"])
+    print("Installing/Updating dependencies...")
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-U", "mne", "esinet", "scipy", "scikit-learn"])
+    import mne
     import esinet
     from esinet import Simulation, Net
     from esinet.forward import create_forward_model, get_info
@@ -46,13 +41,17 @@ def to_array(x):
 def multisource_metrics(gt, pr, pos_mm, neighbors):
     def get_local_maxima(vec):
         vec = vec.ravel()
+        # Ensure vec is not empty and contains at least one non-zero value
         if vec.size == 0:
             return np.array([], dtype=int)
 
+        if np.all(vec <= 0):
+            return np.array([np.argmax(vec)])
+
         gmax = np.max(vec)
-        if gmax <= 0: return np.array([np.argmax(vec)])
         cand = [i for i in range(len(vec)) if i < len(neighbors) and len(neighbors[i]) > 0 and np.all(vec[i] > vec[neighbors[i]])]
         if not cand: return np.array([np.argmax(vec)])
+
         cand = sorted(cand, key=lambda i: vec[i], reverse=True)
         selected = []
         for i in cand:
@@ -68,12 +67,14 @@ def multisource_metrics(gt, pr, pos_mm, neighbors):
     if gt_max.size == 0 or pr_max.size == 0:
         return 100.0, 0.0 # Return high error if no sources found
 
-    D = cdist(pos_mm[gt_max], pos_mm[pr_max])
-    if D.size == 0:
+    try:
+        D = cdist(pos_mm[gt_max], pos_mm[pr_max])
+        if D.size == 0: return 100.0, 0.0
+        min_d = D.min(axis=1)
+        return np.mean(min_d), np.mean(min_d <= 30.0) * 100
+    except Exception as e:
+        logging.error(f"Distance calculation error: {e}")
         return 100.0, 0.0
-
-    min_d = D.min(axis=1)
-    return np.mean(min_d), np.mean(min_d <= 30.0) * 100
 
 def median_mad(data):
     arr = np.array(data)
@@ -121,10 +122,6 @@ class GeneticOptimizer:
         net = Net(self.fwd, model_type='convdip')
 
         try:
-            # Early stopping to speed up optimization phase
-            early_stop = tf.keras.callbacks.EarlyStopping(
-                monitor='loss', patience=5, restore_best_weights=True)
-
             # We use a fixed learning rate for GA to focus on epochs as requested
             net.fit(train_sim, epochs=epochs, validation_split=0.0)
             y_true = val_sim.source_data
@@ -135,8 +132,7 @@ class GeneticOptimizer:
                 jt = to_array(y_true[i])[:, 0]
                 jp = to_array(y_pred[i])[:, 0]
 
-                if jt.size == 0 or jp.size == 0:
-                    logging.warning(f"Empty data encountered at index {i}: jt shape {jt.shape}, jp shape {jp.shape}")
+                if jt.size == 0 or jp.size == 0 or np.all(np.isnan(jp)):
                     mle_list.append(100.0)
                     continue
 
@@ -158,120 +154,87 @@ class GeneticOptimizer:
     def optimize(self, n_samples):
         # Optimization: Use a smaller subset for GA to find the epoch trend faster
         ga_samples = min(n_samples, 5000)
-        logging.info(f"Starting GA optimization using {ga_samples} samples (subset of {n_samples})")
+        logging.info(f"Starting GA optimization using {ga_samples} samples")
 
-        # Simulate data once for all individuals in this generation
         train_sim = Simulation(self.fwd, self.info, settings=self.sim_settings)
         train_sim.simulate(n_samples=ga_samples)
 
         val_sim = Simulation(self.fwd, self.info, settings=self.sim_settings)
-        # Use a reasonable size for validation during GA to save time
         val_samples = min(200, max(50, ga_samples // 10))
         val_sim.simulate(n_samples=val_samples)
 
-        # Initialize population: [epochs]
         population = [[random.randint(1, 500)] for _ in range(self.pop_size)]
-
         best_ind = None
         best_fitness = -1
         best_mle = 1000
 
         for gen in range(self.generations):
-            logging.info(f"Generation {gen+1}/{self.generations}")
+            logging.info(f"GA Generation {gen+1}/{self.generations}")
             fitness_scores = []
             for ind in population:
                 fit, mle = self.fitness(int(ind[0]), train_sim, val_sim)
                 fitness_scores.append(fit)
                 if fit > best_fitness:
-                    best_fitness = fit
-                    best_ind = ind
-                    best_mle = mle
-                logging.info(f"Individual: Epochs={int(ind[0])} -> MLE: {mle:.2f}")
+                    best_fitness, best_ind, best_mle = fit, ind, mle
+                logging.info(f"  Epochs={int(ind[0])} -> MLE: {mle:.2f}")
 
-            # Selection (Tournament)
+            # Tournament Selection
             new_population = []
             for _ in range(self.pop_size // 2):
-                # Winner 1
-                candidates = random.sample(list(zip(population, fitness_scores)), 2)
-                parent1 = max(candidates, key=lambda x: x[1])[0]
-                # Winner 2
-                candidates = random.sample(list(zip(population, fitness_scores)), 2)
-                parent2 = max(candidates, key=lambda x: x[1])[0]
-
-                # Crossover
-                child1 = [(parent1[0] + parent2[0]) // 2]
-                child2 = [random.randint(min(parent1[0], parent2[0]), max(parent1[0], parent2[0]))]
-
-                # Mutation
-                for child in [child1, child2]:
-                    if random.random() < 0.3: # 30% mutation rate
-                        child[0] = np.clip(child[0] + random.randint(-50, 50), 1, 500)
-                    new_population.append(child)
+                p1 = max(random.sample(list(zip(population, fitness_scores)), 2), key=lambda x: x[1])[0]
+                p2 = max(random.sample(list(zip(population, fitness_scores)), 2), key=lambda x: x[1])[0]
+                # Crossover & Mutation
+                c1 = [(p1[0] + p2[0]) // 2]
+                if random.random() < 0.3: c1[0] = np.clip(c1[0] + random.randint(-50, 50), 1, 500)
+                new_population.append(c1)
+                c2 = [random.randint(min(p1[0], p2[0]), max(p1[0], p2[0]))]
+                if random.random() < 0.3: c2[0] = np.clip(c2[0] + random.randint(-50, 50), 1, 500)
+                new_population.append(c2)
             population = new_population
 
-        logging.info(f"Best epochs found for {n_samples} samples: {int(best_ind[0])} (MLE: {best_mle:.2f})")
+        logging.info(f"GA Best: {int(best_ind[0])} epochs (MLE: {best_mle:.2f})")
         return int(best_ind[0])
 
 def run_simulation():
     info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors = initialize_pipeline()
-
     sample_sizes = [1000, 2000, 5000, 10000, 50000, 100000]
-
-    # Updated results directory for rclone mount in Google Colab
     results_dir = '/content/onedrive/Documents/EEG'
-
-    # Fallback to local directory if rclone mount is not active
-    if not os.path.exists('/content/onedrive'):
-        logging.warning(f"rclone mount not found at /content/onedrive. Falling back to local results directory.")
-        results_dir = 'esinet_project_results'
-
+    if not os.path.exists('/content/onedrive'): results_dir = 'esinet_project_results'
     os.makedirs(results_dir, exist_ok=True)
-    logging.info(f"Results will be saved to: {results_dir}")
 
     summary_file = os.path.join(results_dir, 'performance_report.txt')
-    with open(summary_file, 'w') as f:
-        f.write("EEG Source Localization - GA Optimized Epochs\n")
-        f.write("============================================\n")
+    with open(summary_file, 'w') as f: f.write("EEG Source Localization - Robust GA\n" + "="*30 + "\n")
 
     for n in sample_sizes:
-        logging.info(f"\n{'='*30}\nPROCESSING SAMPLE SIZE: {n}\n{'='*30}")
-
-        # GA Phase: Find optimal epochs using a small data subset to save time
-        if n <= 5000:
-            pop_size, gens = 6, 3
-        elif n <= 10000:
-            pop_size, gens = 4, 2
-        else:
-            pop_size, gens = 2, 2 # Minimal GA for very large sets
-
-        optimizer = GeneticOptimizer(fwd, info, pos_gm, neighbors, sim_settings,
-                                     population_size=pop_size, generations=gens)
+        logging.info(f"\nPROCESSING SAMPLE SIZE: {n}")
+        pop_size, gens = (6, 3) if n <= 5000 else ((4, 2) if n <= 10000 else (2, 2))
+        optimizer = GeneticOptimizer(fwd, info, pos_gm, neighbors, sim_settings, population_size=pop_size, generations=gens)
         best_epochs = optimizer.optimize(n)
 
-        # Final Training Phase: Use full dataset with best parameters + EarlyStopping
-        logging.info(f"Simulating full dataset of {n} samples...")
+        # Large-scale Simulation in Chunks to save memory
+        logging.info(f"Simulating {n} samples...")
         train_sim = Simulation(fwd, info, settings=sim_settings)
-        train_sim.simulate(n_samples=n)
+        if n > 20000:
+            # Chunked simulation for very large sets
+            all_source_data = []
+            all_eeg_data = []
+            for _ in range(n // 10000):
+                chunk = Simulation(fwd, info, settings=sim_settings)
+                chunk.simulate(n_samples=10000)
+                all_source_data.append(chunk.source_data)
+                all_eeg_data.append(chunk.eeg_data)
+            train_sim.source_data = np.concatenate(all_source_data, axis=0)
+            train_sim.eeg_data = np.concatenate(all_eeg_data, axis=0)
+        else:
+            train_sim.simulate(n_samples=n)
 
-        # Save simulation data
         joblib.dump(train_sim, os.path.join(results_dir, f'sim_chunk_{n}.pkl'))
 
-        logging.info(f"Training final model for size {n} with {best_epochs} epochs...")
+        logging.info(f"Final Training ({best_epochs} epochs)...")
         net = Net(fwd, model_type='convdip')
-
-        # Final training without EarlyStopping due to library constraints
         history = net.fit(train_sim, epochs=best_epochs, validation_split=0.1)
 
-        # Plot training curve for this run
-        plt.figure(figsize=(10, 5))
-        plt.plot(history.history['loss'], label='Train Loss')
-        plt.plot(history.history['val_loss'], label='Val Loss')
-        plt.title(f'Training History - {n} samples ({best_epochs} epochs)')
-        plt.legend()
-        plt.savefig(os.path.join(results_dir, f'training_report_{n}.png'))
-        plt.close()
-
-        # Evaluation on 1000 test samples
+        # Evaluation
         sim_test = Simulation(fwd_test, info_test, settings=sim_settings)
         sim_test.simulate(n_samples=1000)
         y_true = sim_test.source_data
@@ -279,34 +242,22 @@ def run_simulation():
 
         mle_l, auc_l, found_l = [], [], []
         for i in range(len(y_true)):
-            jt = to_array(y_true[i])[:, 0]
-            jp = to_array(y_pred[i])[:, 0]
+            jt, jp = to_array(y_true[i])[:, 0], to_array(y_pred[i])[:, 0]
+            if jt.size == 0 or jp.size == 0: continue
             mle, found = multisource_metrics(np.abs(jt), np.abs(jp), pos_gm, neighbors)
-            mle_l.append(mle)
-            found_l.append(found)
-            jt_binary = (np.abs(jt) > 0).astype(int)
-            if len(np.unique(jt_binary)) > 1:
-                auc_l.append(roc_auc_score(jt_binary, np.abs(jp)) * 100)
+            mle_l.append(mle); found_l.append(found)
+            jt_b = (np.abs(jt) > 0).astype(int)
+            if len(np.unique(jt_b)) > 1: auc_l.append(roc_auc_score(jt_b, np.abs(jp)) * 100)
 
         mle_m, mle_mad = median_mad(mle_l)
         auc_m, auc_mad = median_mad(auc_l)
-        found_avg = np.mean(found_l)
-
         with open(summary_file, 'a') as f:
-            f.write(f"\nSample Size: {n}\n")
-            f.write(f"Best Epochs: {best_epochs}\n")
-            f.write(f"Median MLE: {mle_m:.2f} mm (MAD: {mle_mad:.2f})\n")
-            f.write(f"Median AUC: {auc_m:.2f} % (MAD: {auc_mad:.2f})\n")
-            f.write(f"Sources Found: {found_avg:.2f} %\n")
-            f.write("-" * 20 + "\n")
+            f.write(f"\nSize: {n} | Epochs: {best_epochs}\n")
+            f.write(f"MLE: {mle_m:.2f} (±{mle_mad:.2f}) | AUC: {auc_m:.2f}% | Found: {np.mean(found_l):.2f}%\n")
 
-        # Save final model
         net.model.save(os.path.join(results_dir, f'trained_net_{n}.keras'))
-
-        # Cleanup
-        del net, train_sim, sim_test
-        gc.collect()
-        tf.keras.backend.clear_session()
+        plt.figure(); plt.plot(history.history['loss'], label='Loss'); plt.savefig(os.path.join(results_dir, f'training_{n}.png')); plt.close()
+        del net, train_sim, sim_test; gc.collect(); tf.keras.backend.clear_session()
 
 if __name__ == "__main__":
     run_simulation()
