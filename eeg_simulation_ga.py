@@ -204,7 +204,7 @@ def run_simulation():
     # 3. !mkdir /content/onedrive
     # 4. !rclone mount onedrive: /content/onedrive --vfs-cache-mode full &
 
-    results_dir = '/content/onedrive/EEG'
+    results_dir = '/content/onedrive/Documents/EEG'
 
     # Fallback to local directory if rclone mount is not active
     if not os.path.exists('/content/onedrive'):
