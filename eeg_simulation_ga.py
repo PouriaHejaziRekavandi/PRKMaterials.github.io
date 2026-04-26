@@ -197,9 +197,16 @@ def run_simulation():
     sample_sizes = [1000, 2000, 5000, 10000, 50000, 100000]
 
     # Updated results directory for SharePoint/OneDrive synchronization
-    results_dir = r'C:\Users\PouriaRK\OneDrive - University of Toledo\Documents\EEG'
+    # The OneDrive root is at C:\Users\PouriaRK\OneDrive - University of Toledo
+    results_dir = r'C:\Users\PouriaRK\OneDrive - University of Toledo\EEG'
 
-    # Fallback to local directory if the OneDrive path is not accessible (e.g. testing)
+    # Fallback check: sometimes synced folders are inside a 'Documents' subfolder
+    if not os.path.exists(os.path.dirname(results_dir)):
+        alt_path = r'C:\Users\PouriaRK\OneDrive - University of Toledo\Documents\EEG'
+        if os.path.exists(os.path.dirname(alt_path)):
+            results_dir = alt_path
+
+    # Final fallback to local directory if neither OneDrive path is accessible
     if not os.path.exists(os.path.dirname(results_dir)):
         logging.warning(f"OneDrive path not found. Falling back to local results directory.")
         results_dir = 'esinet_project_results'
