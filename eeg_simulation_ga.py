@@ -126,7 +126,7 @@ class GeneticOptimizer:
                 monitor='loss', patience=5, restore_best_weights=True)
 
             # We use a fixed learning rate for GA to focus on epochs as requested
-            net.fit(train_sim, epochs=epochs, validation_split=0.0, callbacks=[early_stop])
+            net.fit(train_sim, epochs=epochs, validation_split=0.0)
             y_true = val_sim.source_data
             y_pred = net.predict(val_sim)
 
@@ -259,12 +259,8 @@ def run_simulation():
         logging.info(f"Training final model for size {n} with {best_epochs} epochs...")
         net = Net(fwd, model_type='convdip')
 
-        # Add EarlyStopping for final training to avoid redundant computation
-        early_stop_final = tf.keras.callbacks.EarlyStopping(
-            monitor='val_loss', patience=10, restore_best_weights=True)
-
-        history = net.fit(train_sim, epochs=best_epochs, validation_split=0.1,
-                          callbacks=[early_stop_final])
+        # Final training without EarlyStopping due to library constraints
+        history = net.fit(train_sim, epochs=best_epochs, validation_split=0.1)
 
         # Plot training curve for this run
         plt.figure(figsize=(10, 5))
