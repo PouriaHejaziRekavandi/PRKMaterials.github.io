@@ -21,6 +21,21 @@ from pyvirtualdisplay import Display
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
+# ============================================================
+# Global Configuration & Hyperparameters
+# ============================================================
+EPOCHS = 10
+LEARNING_RATE = 0.001
+BATCH_SIZE = 8
+TOTAL_SAMPLES = 2000
+CHUNK_SIZE = 1000
+
+SIM_SETTINGS = {
+    'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
+    'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
+    'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
+}
+
 def setup_environment():
     # Initialize virtual display
     display = Display(visible=0, size=(1366, 768))
@@ -92,33 +107,24 @@ def initialize_pipeline():
     # FIXED: Changed 'oct3' to 'ico4' so the source space dimensions match the training data for MSE calculation
     fwd_test = create_forward_model(info=info_test, sampling='ico4')
 
-    # Simulation settings
-    sim_settings = {
-        'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
-        'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
-        'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
-    }
-
     # Precompute Leadfields and Neighbors
     fwd_gm = mne.convert_forward_solution(fwd, force_fixed=True, surf_ori=True, use_cps=True)
     pos_gm = np.vstack([s['rr'][s['vertno']] for s in fwd_gm['src']]) * 1000
-    neighbors = []
     adj = mne.spatial_src_adjacency(fwd_gm['src']).tocsr()
-    for i in range(adj.shape[0]):
-        neighbors.append(adj.indices[adj.indptr[i]:adj.indptr[i+1]])
+    neighbors = np.split(adj.indices, adj.indptr[1:-1])
 
     # Create the Network once
     net = Net(fwd, model_type='convdip')
 
-    return info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net
+    return info, fwd, info_test, fwd_test, pos_gm, neighbors, net
 
 
-def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=2000, chunk_size=1000):
-    num_chunks = total_samples // chunk_size
+def train_model(net, fwd, info, checkpoints_dir):
+    num_chunks = TOTAL_SAMPLES // CHUNK_SIZE
 
     os.makedirs(checkpoints_dir, exist_ok=True)
 
-    logging.info(f"Starting Incremental Training for {total_samples} samples in {num_chunks} chunks.")
+    logging.info(f"Starting Incremental Training for {TOTAL_SAMPLES} samples in {num_chunks} chunks.")
 
     all_loss = []
     all_val_loss = []
@@ -127,22 +133,37 @@ def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=200
         logging.info(f"\n--- Processing Chunk {chunk_idx + 1}/{num_chunks} ---")
 
         # 1. Simulate a batch
-        sim_train = Simulation(fwd, info, settings=sim_settings)
-        sim_train.simulate(n_samples=chunk_size)
+        sim_train = Simulation(fwd, info, settings=SIM_SETTINGS)
+        sim_train.simulate(n_samples=CHUNK_SIZE)
+
+        # Monkey-patch model.fit to capture metrics via a LambdaCallback (must be done after first fit starts or we force build)
+        if not hasattr(net, 'model'):
+            net.dropout = 0.2
+            net._build_model()
+
+            original_fit = net.model.fit
+            def patched_fit(*args, **kwargs):
+                callbacks = list(kwargs.get('callbacks', []))
+                history_callback = tf.keras.callbacks.LambdaCallback(
+                    on_epoch_end=lambda epoch, logs: (
+                        all_loss.append(logs.get('loss')),
+                        all_val_loss.append(logs.get('val_loss'))
+                    )
+                )
+                callbacks.append(history_callback)
+                kwargs['callbacks'] = callbacks
+                return original_fit(*args, **kwargs)
+            net.model.fit = patched_fit
 
         # 2. Fit the model (weights are preserved across calls)
-        history = net.fit(sim_train, epochs=10, validation_split=0.1)
-
-        if hasattr(history, 'history'):
-            all_loss.extend(history.history.get('loss', []))
-            all_val_loss.extend(history.history.get('val_loss', []))
+        net.fit(sim_train, epochs=EPOCHS, validation_split=0.1, learning_rate=LEARNING_RATE, batch_size=BATCH_SIZE)
 
         # 3. Save progress locally to Drive
         chunk_dir = os.path.join(checkpoints_dir, f'convdip_checkpoint_chunk_{chunk_idx+1}')
         if os.path.exists(chunk_dir):
             shutil.rmtree(chunk_dir)
         os.makedirs(chunk_dir, exist_ok=True)
-        net.model.save(f'{chunk_dir}.keras')
+        net.save(chunk_dir)
 
         # 4. Memory Cleanup
         del sim_train
@@ -153,9 +174,9 @@ def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=200
     return all_loss, all_val_loss
 
 
-def evaluate_model(net, fwd_test, info_test, sim_settings, pos_gm, neighbors):
+def evaluate_model(net, fwd_test, info_test, pos_gm, neighbors):
     logging.info("\nPerforming Final Evaluation on Fixed Test Set...")
-    sim_test = Simulation(fwd_test, info_test, settings=sim_settings)
+    sim_test = Simulation(fwd_test, info_test, settings=SIM_SETTINGS)
     sim_test.simulate(n_samples=1000)
     y_true = sim_test.source_data
     y_pred = net.predict(sim_test)
@@ -276,15 +297,12 @@ def save_and_load_data(y_true, y_pred, mle_l, mse_l, nmse_l, auc_l, found_l):
 def main():
     checkpoints_dir = setup_environment()
 
-    info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net = initialize_pipeline()
+    info, fwd, info_test, fwd_test, pos_gm, neighbors, net = initialize_pipeline()
 
-    all_loss, all_val_loss = train_model(
-        net, fwd, info, sim_settings, checkpoints_dir,
-        total_samples=2000, chunk_size=1000
-    )
+    all_loss, all_val_loss = train_model(net, fwd, info, checkpoints_dir)
 
     y_true, y_pred, mle_l, found_l, auc_l, mse_l, nmse_l = evaluate_model(
-        net, fwd_test, info_test, sim_settings, pos_gm, neighbors
+        net, fwd_test, info_test, pos_gm, neighbors
     )
 
     plot_results(all_loss, all_val_loss, mle_l)
