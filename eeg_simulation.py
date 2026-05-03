@@ -21,6 +21,22 @@ from pyvirtualdisplay import Display
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
+# ============================================================
+# Global Configuration
+# ============================================================
+EPOCHS = 10
+LEARNING_RATE = 1e-4
+BATCH_SIZE = 16
+TOTAL_SAMPLES = 2000
+CHUNK_SIZE = 1000
+
+SIM_SETTINGS = {
+    'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
+    'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
+    'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
+}
+
+
 def setup_environment():
     # Initialize virtual display
     display = Display(visible=0, size=(1366, 768))
@@ -92,28 +108,20 @@ def initialize_pipeline():
     # FIXED: Changed 'oct3' to 'ico4' so the source space dimensions match the training data for MSE calculation
     fwd_test = create_forward_model(info=info_test, sampling='ico4')
 
-    # Simulation settings
-    sim_settings = {
-        'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
-        'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
-        'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
-    }
-
     # Precompute Leadfields and Neighbors
     fwd_gm = mne.convert_forward_solution(fwd, force_fixed=True, surf_ori=True, use_cps=True)
     pos_gm = np.vstack([s['rr'][s['vertno']] for s in fwd_gm['src']]) * 1000
-    neighbors = []
+
     adj = mne.spatial_src_adjacency(fwd_gm['src']).tocsr()
-    for i in range(adj.shape[0]):
-        neighbors.append(adj.indices[adj.indptr[i]:adj.indptr[i+1]])
+    neighbors = np.split(adj.indices, adj.indptr[1:-1])
 
     # Create the Network once
     net = Net(fwd, model_type='convdip')
 
-    return info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net
+    return info, fwd, info_test, fwd_test, SIM_SETTINGS, pos_gm, neighbors, net
 
 
-def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=2000, chunk_size=1000):
+def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=TOTAL_SAMPLES, chunk_size=CHUNK_SIZE):
     num_chunks = total_samples // chunk_size
 
     os.makedirs(checkpoints_dir, exist_ok=True)
@@ -130,12 +138,37 @@ def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=200
         sim_train = Simulation(fwd, info, settings=sim_settings)
         sim_train.simulate(n_samples=chunk_size)
 
-        # 2. Fit the model (weights are preserved across calls)
-        history = net.fit(sim_train, epochs=10, validation_split=0.1)
+        # Setup monkey-patch for tracking loss
+        chunk_loss = []
+        chunk_val_loss = []
+        loss_callback = tf.keras.callbacks.LambdaCallback(
+            on_epoch_end=lambda epoch, logs: [
+                chunk_loss.append(logs.get('loss')),
+                chunk_val_loss.append(logs.get('val_loss'))
+            ]
+        )
 
-        if hasattr(history, 'history'):
-            all_loss.extend(history.history.get('loss', []))
-            all_val_loss.extend(history.history.get('val_loss', []))
+        original_fit = net.model.fit
+
+        def patched_fit(*args, **kwargs):
+            callbacks = kwargs.get('callbacks', [])
+            if not isinstance(callbacks, list):
+                callbacks = list(callbacks)
+            callbacks.append(loss_callback)
+            kwargs['callbacks'] = callbacks
+            return original_fit(*args, **kwargs)
+
+        net.model.fit = patched_fit
+
+        # 2. Fit the model (weights are preserved across calls)
+        try:
+            net.fit(sim_train, epochs=EPOCHS, batch_size=BATCH_SIZE, validation_split=0.1)
+        finally:
+            # Restore original fit method to avoid accumulating callbacks
+            net.model.fit = original_fit
+
+        all_loss.extend(chunk_loss)
+        all_val_loss.extend(chunk_val_loss)
 
         # 3. Save progress locally to Drive
         chunk_dir = os.path.join(checkpoints_dir, f'convdip_checkpoint_chunk_{chunk_idx+1}')
@@ -278,9 +311,13 @@ def main():
 
     info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net = initialize_pipeline()
 
+    # Optional: If net.model has a learning rate, set it. e.g.:
+    if hasattr(net, 'model') and hasattr(net.model, 'optimizer'):
+        K.set_value(net.model.optimizer.learning_rate, LEARNING_RATE)
+
     all_loss, all_val_loss = train_model(
         net, fwd, info, sim_settings, checkpoints_dir,
-        total_samples=2000, chunk_size=1000
+        total_samples=TOTAL_SAMPLES, chunk_size=CHUNK_SIZE
     )
 
     y_true, y_pred, mle_l, found_l, auc_l, mse_l, nmse_l = evaluate_model(

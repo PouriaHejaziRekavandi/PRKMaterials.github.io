@@ -1,4 +1,7 @@
-script.log
+*.log
 *.png
 *.npz
+*.pkl
+*.keras
+__pycache__/
 checkpoints/
