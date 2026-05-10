@@ -131,11 +131,23 @@ def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=200
         sim_train.simulate(n_samples=chunk_size)
 
         # 2. Fit the model (weights are preserved across calls)
-        history = net.fit(sim_train, epochs=10, validation_split=0.1)
+        # Monkey-patch fit to extract losses
+        original_fit = net.model.fit
+        def patched_fit(*args, **kwargs):
+            callbacks = kwargs.get('callbacks') or []
+            loss_cb = tf.keras.callbacks.LambdaCallback(
+                on_epoch_end=lambda epoch, logs: (
+                    all_loss.append(logs.get('loss')),
+                    all_val_loss.append(logs.get('val_loss'))
+                )
+            )
+            callbacks.append(loss_cb)
+            kwargs['callbacks'] = callbacks
+            return original_fit(*args, **kwargs)
 
-        if hasattr(history, 'history'):
-            all_loss.extend(history.history.get('loss', []))
-            all_val_loss.extend(history.history.get('val_loss', []))
+        net.model.fit = patched_fit
+        net.fit(sim_train, epochs=10, validation_split=0.1)
+        net.model.fit = original_fit
 
         # 3. Save progress locally to Drive
         chunk_dir = os.path.join(checkpoints_dir, f'convdip_checkpoint_chunk_{chunk_idx+1}')
