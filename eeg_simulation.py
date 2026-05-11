@@ -18,8 +18,25 @@ from esinet import Simulation, Net
 from esinet.forward import create_forward_model, get_info
 from pyvirtualdisplay import Display
 
+from eeg_utils import to_array, multisource_metrics, median_mad
+
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+
+# ============================================================
+# Global Constants & Settings
+# ============================================================
+EPOCHS = 10
+VALIDATION_SPLIT = 0.1
+TOTAL_SAMPLES = 2000
+CHUNK_SIZE = 1000
+
+SIM_SETTINGS = {
+    'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
+    'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
+    'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
+}
+
 
 def setup_environment():
     # Initialize virtual display
@@ -40,45 +57,6 @@ def setup_environment():
 
     return checkpoints_dir
 
-# ============================================================
-# Optimized Batch Training Functions
-# ============================================================
-def to_array(x):
-    if hasattr(x, "data"): return np.asarray(x.data)
-    x = np.asarray(x)
-    return x if x.ndim == 2 else x[:, None]
-
-def multisource_metrics(gt, pr, pos_mm, neighbors):
-    def get_local_maxima(vec):
-        vec = vec.ravel()
-        gmax = np.max(vec)
-        if gmax <= 0: return np.array([np.argmax(vec)])
-        cand = [i for i in range(len(vec)) if len(neighbors[i]) > 0 and np.all(vec[i] > vec[neighbors[i]])]
-        if not cand: return np.array([np.argmax(vec)])
-        cand = sorted(cand, key=lambda i: vec[i], reverse=True)
-        selected = []
-        for i in cand:
-            if not selected: selected.append(i)
-            else:
-                d = np.linalg.norm(pos_mm[selected] - pos_mm[i], axis=1)
-                if np.all(d > 30.0): selected.append(i)
-        return np.array(selected)
-
-    gt_max = get_local_maxima(gt)
-    pr_max = get_local_maxima(pr)
-    D = cdist(pos_mm[gt_max], pos_mm[pr_max])
-    min_d = D.min(axis=1)
-    return np.mean(min_d), np.mean(min_d <= 30.0) * 100
-
-def median_mad(data):
-    arr = np.array(data)
-    arr = arr[np.isfinite(arr)] # حذف مقادیر نامعتبر
-    if len(arr) == 0:
-        return np.nan, np.nan
-    med = np.median(arr)
-    mad = np.median(np.abs(arr - med))
-    return med, mad
-
 def initialize_pipeline():
     logging.info("Initializing Forward Models...")
     info = get_info(sfreq=100)
@@ -92,33 +70,24 @@ def initialize_pipeline():
     # FIXED: Changed 'oct3' to 'ico4' so the source space dimensions match the training data for MSE calculation
     fwd_test = create_forward_model(info=info_test, sampling='ico4')
 
-    # Simulation settings
-    sim_settings = {
-        'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
-        'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
-        'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
-    }
-
     # Precompute Leadfields and Neighbors
     fwd_gm = mne.convert_forward_solution(fwd, force_fixed=True, surf_ori=True, use_cps=True)
     pos_gm = np.vstack([s['rr'][s['vertno']] for s in fwd_gm['src']]) * 1000
-    neighbors = []
     adj = mne.spatial_src_adjacency(fwd_gm['src']).tocsr()
-    for i in range(adj.shape[0]):
-        neighbors.append(adj.indices[adj.indptr[i]:adj.indptr[i+1]])
+    neighbors = np.split(adj.indices, adj.indptr[1:-1])
 
     # Create the Network once
     net = Net(fwd, model_type='convdip')
 
-    return info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net
+    return info, fwd, info_test, fwd_test, pos_gm, neighbors, net
 
 
-def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=2000, chunk_size=1000):
-    num_chunks = total_samples // chunk_size
+def train_model(net, fwd, info, checkpoints_dir):
+    num_chunks = TOTAL_SAMPLES // CHUNK_SIZE
 
     os.makedirs(checkpoints_dir, exist_ok=True)
 
-    logging.info(f"Starting Incremental Training for {total_samples} samples in {num_chunks} chunks.")
+    logging.info(f"Starting Incremental Training for {TOTAL_SAMPLES} samples in {num_chunks} chunks.")
 
     all_loss = []
     all_val_loss = []
@@ -127,15 +96,15 @@ def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=200
         logging.info(f"\n--- Processing Chunk {chunk_idx + 1}/{num_chunks} ---")
 
         # 1. Simulate a batch
-        sim_train = Simulation(fwd, info, settings=sim_settings)
-        sim_train.simulate(n_samples=chunk_size)
+        sim_train = Simulation(fwd, info, settings=SIM_SETTINGS)
+        sim_train.simulate(n_samples=CHUNK_SIZE)
 
         # 2. Fit the model (weights are preserved across calls)
-        history = net.fit(sim_train, epochs=10, validation_split=0.1)
-
-        if hasattr(history, 'history'):
-            all_loss.extend(history.history.get('loss', []))
-            all_val_loss.extend(history.history.get('val_loss', []))
+        # Note: net.fit in esinet returns the Net object, not the history
+        net.fit(sim_train, epochs=EPOCHS, validation_split=VALIDATION_SPLIT)
+        if hasattr(net.model, 'history') and hasattr(net.model.history, 'history'):
+            all_loss.extend(net.model.history.history.get('loss', []))
+            all_val_loss.extend(net.model.history.history.get('val_loss', []))
 
         # 3. Save progress locally to Drive
         chunk_dir = os.path.join(checkpoints_dir, f'convdip_checkpoint_chunk_{chunk_idx+1}')
@@ -153,9 +122,9 @@ def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=200
     return all_loss, all_val_loss
 
 
-def evaluate_model(net, fwd_test, info_test, sim_settings, pos_gm, neighbors):
+def evaluate_model(net, fwd_test, info_test, pos_gm, neighbors):
     logging.info("\nPerforming Final Evaluation on Fixed Test Set...")
-    sim_test = Simulation(fwd_test, info_test, settings=sim_settings)
+    sim_test = Simulation(fwd_test, info_test, settings=SIM_SETTINGS)
     sim_test.simulate(n_samples=1000)
     y_true = sim_test.source_data
     y_pred = net.predict(sim_test)
@@ -181,7 +150,7 @@ def evaluate_model(net, fwd_test, info_test, sim_settings, pos_gm, neighbors):
 
         # محاسبه AUC
         jt_binary = (np.abs(jt) > 0).astype(int)
-        if len(np.unique(jt_binary)) > 1:
+        if jt_binary.any() and not jt_binary.all():
             # FIXED: Multiplied by 100 to display properly as percentage in the final report
             auc = roc_auc_score(jt_binary, np.abs(jp)) * 100
             auc_l.append(auc)
@@ -276,15 +245,14 @@ def save_and_load_data(y_true, y_pred, mle_l, mse_l, nmse_l, auc_l, found_l):
 def main():
     checkpoints_dir = setup_environment()
 
-    info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net = initialize_pipeline()
+    info, fwd, info_test, fwd_test, pos_gm, neighbors, net = initialize_pipeline()
 
     all_loss, all_val_loss = train_model(
-        net, fwd, info, sim_settings, checkpoints_dir,
-        total_samples=2000, chunk_size=1000
+        net, fwd, info, checkpoints_dir
     )
 
     y_true, y_pred, mle_l, found_l, auc_l, mse_l, nmse_l = evaluate_model(
-        net, fwd_test, info_test, sim_settings, pos_gm, neighbors
+        net, fwd_test, info_test, pos_gm, neighbors
     )
 
     plot_results(all_loss, all_val_loss, mle_l)
