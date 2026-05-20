@@ -17,37 +17,30 @@
             overflow-x: hidden;
         }
 
-        /* --- استایل جدید هدر متحرک --- */
+        /* --- استایل هدر متحرک --- */
         header {
             position: relative;
             padding: 6rem 1rem;
             text-align: center;
             border-bottom: 2px solid #00ff41;
-            overflow: hidden; /* برای اینکه عکس از کادر بیرون نزند */
+            overflow: hidden; 
             z-index: 1;
         }
 
-        /* لایه پس‌زمینه متحرک */
         header::before {
             content: "";
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            /* عکس شما اینجا لود می‌شود */
             background: url('header-bg.jpg') no-repeat center center;
             background-size: cover;
-            
-            /* تبدیل به سیاه و سفید و افزایش کنتراست */
             filter: grayscale(100%) contrast(1.2) brightness(0.4); 
-            
-            /* انیمیشن حرکت آرام */
             animation: cosmic-move 40s infinite alternate linear;
-            z-index: -1; /* رفتن به پشت نوشته‌ها */
+            z-index: -1; 
         }
 
-        /* تعریف انیمیشن حرکت عکس */
         @keyframes cosmic-move {
             0% { transform: scale(1.1); }
-            100% { transform: scale(1.4); } /* عکس آرام زوم می‌شود */
+            100% { transform: scale(1.4); } 
         }
 
         h1 {
@@ -78,7 +71,7 @@
             text-shadow: 0 0 5px #00b8ff;
         }
 
-        /* نوار منو */
+        /* --- نوار منو --- */
         nav {
             display: flex;
             justify-content: center;
@@ -107,6 +100,7 @@
             color: #00ff41;
             text-shadow: 0 0 8px #00ff41;
         }
+        
         nav a::after {
             content: '';
             display: block;
@@ -115,16 +109,17 @@
             background: #00ff41;
             transition: width .3s;
         }
+        
         nav a:hover::after { width: 100%; }
 
-        /* کانتینر اصلی */
+        /* --- کانتینر اصلی --- */
         .container {
             max-width: 1100px;
             margin: 50px auto;
             padding: 20px;
         }
 
-        /* بخش پروفایل */
+        /* --- بخش پروفایل --- */
         .profile-section {
             display: flex;
             align-items: center;
@@ -139,7 +134,6 @@
             overflow: hidden;
         }
 
-        /* افکت نویز ریز روی باکس پروفایل */
         .profile-section::before {
             content: "";
             position: absolute;
@@ -168,7 +162,7 @@
             border-radius: 50%;
             border: 4px solid #00b8ff;
             box-shadow: 0 0 20px rgba(0, 184, 255, 0.5);
-            filter: grayscale(100%) contrast(1.1); /* عکس پروفایل هم کمی گرای‌اسکیل شد */
+            filter: grayscale(100%) contrast(1.1); 
             transition: 0.5s;
         }
 
@@ -194,6 +188,88 @@
 
         strong { color: #00ff41; }
 
+        /* --- استایل بخش مقالات (Publications) --- */
+        .publications-section {
+            margin-top: 60px;
+            border-top: 1px dashed #333;
+            padding-top: 40px;
+        }
+
+        .section-title {
+            color: #fff;
+            border-bottom: 2px solid #00b8ff;
+            display: inline-block;
+            padding-bottom: 5px;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .pub-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .pub-card {
+            background: rgba(20, 20, 20, 0.6);
+            border: 1px solid #333;
+            border-left: 4px solid #00ff41;
+            padding: 20px 25px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .pub-card:hover {
+            transform: translateX(10px); 
+            border-left-color: #00b8ff; 
+            box-shadow: 0 0 15px rgba(0, 184, 255, 0.15);
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .pub-title {
+            color: #00ff41;
+            font-size: 1.2rem;
+            margin: 0 0 10px 0;
+            font-weight: bold;
+        }
+
+        .pub-authors {
+            color: #e0e0e0;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .pub-journal {
+            color: #00b8ff;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .pub-link {
+            display: inline-block;
+            color: #050505;
+            background-color: #00ff41;
+            padding: 8px 20px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.85rem;
+            border-radius: 3px;
+            transition: 0.3s;
+            text-transform: uppercase;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        .pub-link:hover {
+            background-color: #00b8ff;
+            color: #fff;
+            box-shadow: 0 0 10px #00b8ff;
+        }
+
+        /* --- فوتر --- */
         footer {
             text-align: center;
             padding: 30px;
@@ -204,6 +280,7 @@
             margin-top: 50px;
         }
 
+        /* --- واکنش‌گرایی برای موبایل --- */
         @media (max-width: 768px) {
             h1 { font-size: 1.2rem; white-space: normal; border: none; animation: none;}
             .profile-section { flex-direction: column; text-align: center; }
@@ -220,19 +297,20 @@
 
     <nav>
         <a href="index.html">Home</a>
-        <a href="about.html" target="_blank">About</a>
-        <a href="equipment.html" target="_blank">Lab Gear</a>
-        <a href="abaqus.html" target="_blank">Abaqus_Sims</a>
-        <a href="research.html" target="_blank">Research_Data</a>
-        <a href="studied.html" target="_blank">Literature_Review</a>
-        <a href="publications.html" target="_blank">Publications</a>
-        <a href="future.html" target="_blank">Future_Plans</a>
-        <a href="contact.html" target="_blank">Connect</a>
+        <a href="about.html">About</a>
+        <a href="equipment.html">Lab Gear</a>
+        <a href="abaqus.html">Abaqus_Sims</a>
+        <a href="research.html">Research_Data</a>
+        <a href="studied.html">Literature_Review</a>
+        <a href="publications.html">Publications</a>
+        <a href="future.html">Future_Plans</a>
+        <a href="contact.html">Connect</a>
     </nav>
 
     <div class="container">
+        
+        <!-- بخش پروفایل -->
         <div class="profile-section">
-            
             <img src="profile.jpg" alt="Pouria Hejazi Rekavandi" class="profile-pic">
             
             <div class="about-text">
@@ -251,6 +329,40 @@
                 </p>
             </div>
         </div>
+
+        <!-- بخش مقالات -->
+        <div class="publications-section">
+            <h2 class="section-title">// PUBLICATIONS_LOG</h2>
+            
+            <div class="pub-grid">
+                
+                <!-- مقاله شماره ۱ -->
+                <div class="pub-card">
+                    <h3 class="pub-title">Thermomechanical Coupling in Directed Energy Deposition (DED)</h3>
+                    <p class="pub-authors"><strong>Pouria Hejazi Rekavandi</strong>, [نام سایر نویسندگان]</p>
+                    <p class="pub-journal">Journal of Composite Materials | 2025</p>
+                    <a href="لینک-مجله-را-اینجا-بگذارید" target="_blank" class="pub-link">Access Article ></a>
+                </div>
+
+                <!-- مقاله شماره ۲ -->
+                <div class="pub-card">
+                    <h3 class="pub-title">Nonlinear Simulations and Pull-out Tests of Honeycomb Cores</h3>
+                    <p class="pub-authors"><strong>Pouria Hejazi Rekavandi</strong>, [نام سایر نویسندگان]</p>
+                    <p class="pub-journal">International Journal of Mechanical Sciences | 2024</p>
+                    <a href="لینک-مجله-را-اینجا-بگذارید" target="_blank" class="pub-link">Access Article ></a>
+                </div>
+
+                <!-- مقاله شماره ۳ -->
+                <div class="pub-card">
+                    <h3 class="pub-title">Liquid Crystal Elastomers (LCE) for Advanced Bio-inspired Engineering</h3>
+                    <p class="pub-authors"><strong>Pouria Hejazi Rekavandi</strong>, [نام سایر نویسندگان]</p>
+                    <p class="pub-journal">Smart Materials and Structures | 2023</p>
+                    <a href="لینک-مجله-را-اینجا-بگذارید" target="_blank" class="pub-link">Access Article ></a>
+                </div>
+
+            </div>
+        </div>
+
     </div>
 
     <footer>
