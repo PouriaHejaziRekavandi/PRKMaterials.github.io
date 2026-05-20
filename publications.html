@@ -1,355 +1,82 @@
-<!DOCTYPE html>
-<html lang="en" dir="ltr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PUBLICATIONS - RKV MATERIALS</title>
-    <style>
-        /* تنظیمات کلی و فونت */
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap');
+/* --- استایل بخش مقالات (Publications) --- */
+.publications-section {
+    margin-top: 60px;
+    border-top: 1px dashed #333;
+    padding-top: 40px;
+}
 
-        body {
-            background-color: #050505;
-            color: #e0e0e0;
-            font-family: 'Roboto Mono', monospace;
-            margin: 0;
-            padding: 0;
-            overflow-x: hidden;
-        }
+.section-title {
+    color: #fff;
+    border-bottom: 2px solid #00b8ff;
+    display: inline-block;
+    padding-bottom: 5px;
+    font-family: 'Orbitron', sans-serif;
+    text-transform: uppercase;
+    margin-bottom: 30px;
+    letter-spacing: 2px;
+}
 
-        /* --- استایل هدر متحرک --- */
-        header {
-            position: relative;
-            padding: 6rem 1rem;
-            text-align: center;
-            border-bottom: 2px solid #00ff41;
-            overflow: hidden;
-            z-index: 1;
-        }
+.pub-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
 
-        /* لایه پس‌زمینه متحرک */
-        header::before {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: url('header-bg.jpg') no-repeat center center;
-            background-size: cover;
-            filter: grayscale(100%) contrast(1.2) brightness(0.4); 
-            animation: cosmic-move 40s infinite alternate linear;
-            z-index: -1;
-        }
+.pub-card {
+    background: rgba(20, 20, 20, 0.6);
+    border: 1px solid #333;
+    border-left: 4px solid #00ff41; /* نوار سبز رنگ کنار هر مقاله */
+    padding: 20px 25px;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    position: relative;
+}
 
-        @keyframes cosmic-move {
-            0% { transform: scale(1.1); }
-            100% { transform: scale(1.4); }
-        }
+/* افکت هنگام رفتن موس روی مقاله */
+.pub-card:hover {
+    transform: translateX(10px); /* حرکت ظریف به سمت راست */
+    border-left-color: #00b8ff; /* تغییر رنگ نوار به آبی */
+    box-shadow: 0 0 15px rgba(0, 184, 255, 0.15);
+    background: rgba(30, 30, 30, 0.8);
+}
 
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            color: #00ff41;
-            text-shadow: 0 0 10px rgba(0, 255, 65, 0.7);
-            margin: 0;
-            display: inline-block;
-            overflow: hidden;
-            border-right: .15em solid #00ff41;
-            white-space: nowrap;
-            letter-spacing: 2px;
-            animation: typing 3.5s steps(30, end), blink-caret .75s step-end infinite;
-            max-width: 100%;
-        }
+.pub-title {
+    color: #00ff41;
+    font-size: 1.2rem;
+    margin: 0 0 10px 0;
+    font-weight: bold;
+}
 
-        @keyframes typing { from { width: 0 } to { width: 100% } }
-        @keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #00ff41; } }
+.pub-authors {
+    color: #e0e0e0;
+    font-size: 0.95rem;
+    margin-bottom: 5px;
+}
 
-        header p {
-            color: #00b8ff;
-            margin-top: 15px;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            font-weight: bold;
-            text-shadow: 0 0 5px #00b8ff;
-        }
+.pub-journal {
+    color: #00b8ff;
+    font-size: 0.85rem;
+    font-style: italic;
+    margin-bottom: 20px;
+}
 
-        /* نوار منو */
-        nav {
-            display: flex;
-            justify-content: center;
-            background: rgba(0, 0, 0, 0.9);
-            padding: 15px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            flex-wrap: wrap;
-            border-bottom: 1px solid #333;
-            backdrop-filter: blur(5px);
-        }
+/* استایل دکمه لینک به مجله */
+.pub-link {
+    display: inline-block;
+    color: #050505;
+    background-color: #00ff41;
+    padding: 8px 20px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 0.85rem;
+    border-radius: 3px;
+    transition: 0.3s;
+    text-transform: uppercase;
+    font-family: 'Orbitron', sans-serif;
+}
 
-        nav a {
-            color: #fff;
-            text-decoration: none;
-            margin: 8px 15px;
-            font-weight: bold;
-            font-size: 14px;
-            position: relative;
-            transition: 0.3s;
-            text-transform: uppercase;
-        }
-
-        nav a:hover {
-            color: #00ff41;
-            text-shadow: 0 0 8px #00ff41;
-        }
-        nav a::after {
-            content: '';
-            display: block;
-            width: 0;
-            height: 2px;
-            background: #00ff41;
-            transition: width .3s;
-        }
-        nav a:hover::after { width: 100%; }
-
-        /* کانتینر اصلی */
-        .container {
-            max-width: 1100px;
-            margin: 50px auto;
-            padding: 20px;
-        }
-
-        /* --- استایل مقالات --- */
-        .publications-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-
-        .pub-item {
-            background: rgba(20, 20, 20, 0.8);
-            border-left: 4px solid #00ff41;
-            padding: 20px;
-            margin-bottom: 25px;
-            position: relative;
-            transition: all 0.3s ease;
-            box-shadow: 0 0 10px rgba(0, 255, 65, 0.05);
-        }
-
-        .pub-item:hover {
-            border-left-color: #00b8ff;
-            background: rgba(0, 184, 255, 0.05);
-            transform: translateX(10px);
-            box-shadow: -5px 0 15px rgba(0, 184, 255, 0.2);
-        }
-
-        .pub-year {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            color: #00b8ff;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        .pub-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.2rem;
-            margin: 0 0 10px 0;
-            line-height: 1.5;
-        }
-
-        .pub-title a {
-            color: #e0e0e0;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .pub-title a:hover {
-            color: #00ff41;
-            text-shadow: 0 0 5px #00ff41;
-        }
-
-        .pub-authors {
-            color: #a0a0a0;
-            font-size: 0.95rem;
-            margin: 0 0 10px 0;
-        }
-
-        .pub-authors strong {
-            color: #00ff41; 
-        }
-
-        .pub-journal {
-            color: #00b8ff;
-            font-style: italic;
-            font-size: 0.9rem;
-            margin: 0;
-        }
-
-        .pub-metrics {
-            margin-top: 15px;
-            font-size: 0.85rem;
-            color: #666;
-            border-top: 1px dashed #333;
-            padding-top: 10px;
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px;
-            background: #000;
-            color: #555;
-            font-size: 12px;
-            border-top: 1px solid #222;
-            margin-top: 50px;
-        }
-
-        @media (max-width: 768px) {
-            h1 { font-size: 1.2rem; white-space: normal; border: none; animation: none;}
-            .pub-year { position: static; display: block; margin-bottom: 10px; }
-        }
-    </style>
-</head>
-<body>
-
-    <header>
-        <h1>RESEARCH PUBLICATIONS</h1>
-        <p>[ System Status: Online | Query: Fetching Scholar Data ]</p>
-    </header>
-
-    <nav>
-        <a href="index.html">Home</a>
-        <a href="about.html" target="_blank" rel="noopener noreferrer">About</a>
-        <a href="equipment.html" target="_blank" rel="noopener noreferrer">Lab Gear</a>
-        <a href="abaqus.html" target="_blank" rel="noopener noreferrer">Abaqus_Sims</a>
-        <a href="research.html" target="_blank" rel="noopener noreferrer">Research_Data</a>
-        <a href="studied.html" target="_blank" rel="noopener noreferrer">Literature_Review</a>
-        <a href="publications.html">Publications</a>
-        <a href="future.html" target="_blank" rel="noopener noreferrer">Future_Plans</a>
-        <a href="contact.html" target="_blank" rel="noopener noreferrer">Connect</a>
-    </nav>
-
-    <div class="container">
-        <div class="publications-container">
-            <h2 style="color: #00ff41; border-bottom: 1px solid #333; padding-bottom: 10px; font-family: 'Orbitron', sans-serif;">
-                > SCHOLAR_DATABASE // AUTHOR: S. S. HEJAZI REKAVANDI
-            </h2>
-            
-            <div class="pub-item">
-                <div class="pub-year">2022</div>
-                <h3 class="pub-title">
-                    <a href="https://doi.org/10.1016/j.tafmec.2022.103435" target="_blank" rel="noopener noreferrer">
-                        Weight functions and thermal stress intensity factors for two symmetric non-collinear radial cracks in cylinders
-                    </a>
-                </h3>
-                <p class="pub-authors">
-                    S. M. Nabavi, <strong>S. S. Hejazi Rekavandi</strong>
-                </p>
-                <p class="pub-journal">
-                    > PUBLISHED IN: Theoretical and Applied Fracture Mechanics (ScienceDirect)
-                </p>
-                <div class="pub-metrics">
-                    [ STATUS: VERIFIED | PUBLISHER LINK ACTIVE ]
-                </div>
-            </div>
-
-            <div class="pub-item">
-                <div class="pub-year">2019</div>
-                <h3 class="pub-title">
-                    <a href="https://doi.org/10.24132/acm.2019.539" target="_blank" rel="noopener noreferrer">
-                        Analysis of stress intensity factors for functionally graded cylinders with multiple longitudinal cracks using finite element method
-                    </a>
-                </h3>
-                <p class="pub-authors">
-                    S. M. Nabavi, <strong>S. S. Hejazi Rekavandi</strong>
-                </p>
-                <p class="pub-journal">
-                    > PUBLISHED IN: Applied and Computational Mechanics
-                </p>
-                <div class="pub-metrics">
-                    [ STATUS: VERIFIED | PUBLISHER LINK ACTIVE ]
-                </div>
-            </div>
-
-            <div class="pub-item">
-                <div class="pub-year">2020</div>
-                <h3 class="pub-title">
-                    <a href="https://doi.org/10.1016/j.tafmec.2020.102789" target="_blank" rel="noopener noreferrer">
-                        A weight function for multiple longitudinal cracks in functionally graded hollow cylinders
-                    </a>
-                </h3>
-                <p class="pub-authors">
-                    S. M. Nabavi, <strong>S. S. Hejazi Rekavandi</strong>
-                </p>
-                <p class="pub-journal">
-                    > PUBLISHED IN: Theoretical and Applied Fracture Mechanics (ScienceDirect)
-                </p>
-                <div class="pub-metrics">
-                    [ STATUS: VERIFIED | PUBLISHER LINK ACTIVE ]
-                </div>
-            </div>
-
-            <div class="pub-item">
-                <div class="pub-year">2021</div>
-                <h3 class="pub-title">
-                    <a href="YOUR_PDF_FILE_NAME.pdf" target="_blank" rel="noopener noreferrer">
-                        (PDF) Stress intensity factors for asymmetric longitudinal cracks in hollow cylinder subject to thermo-mechanical loading
-                    </a>
-                </h3>
-                <p class="pub-authors">
-                    S. M. Nabavi, <strong>S. S. Hejazi Rekavandi</strong>
-                </p>
-                <p class="pub-journal">
-                    > PUBLISHED IN: 3rd National Conference on Computational and Experimental Mechanics
-                </p>
-                <div class="pub-metrics">
-                    [ STATUS: VERIFIED | DIRECT DOWNLOAD LINK ]
-                </div>
-            </div>
-
-            <div class="pub-item">
-                <div class="pub-year">2020</div>
-                <h3 class="pub-title">
-                    <a href="https://www.researchgate.net/publication/344841103_Multiple_axial_cracks_in_a_functionally_graded_hollow_cylinder_due_to_internal_pressure?_tp=eyJjb250ZXh0Ijp7ImZpcnN0UGFnZSI6Il9kaXJlY3QiLCJwYWdlIjoicHJvZmlsZSIsInByZXZpb3VzUGFnZSI6InByb2ZpbGUiLCJwb3NpdGlvbiI6InBhZ2VDb250ZW50In19" target="_blank" rel="noopener noreferrer">
-                        Multiple axial cracks in a functionally graded hollow cylinder due to internal pressure
-                    </a>
-                </h3>
-                <p class="pub-authors">
-                    S. M. Nabavi, <strong>S. S. Hejazi Rekavandi</strong>
-                </p>
-                <p class="pub-journal">
-                    > PUBLISHED IN: 2nd National Conference on Computational and Experimental Mechanics (ResearchGate)
-                </p>
-                <div class="pub-metrics">
-                    [ STATUS: VERIFIED | RESEARCHGATE LINK ACTIVE ]
-                </div>
-            </div>
-
-            <div class="pub-item">
-                <div class="pub-year">2018</div>
-                <h3 class="pub-title">
-                    <a href="https://www.researchgate.net/publication/353751467_Calculation_of_stress_intensity_factor_for_functionally_graded_cylinders_With_two_Asymmetrical_radial_cracks?_tp=eyJjb250ZXh0Ijp7ImZpcnN0UGFnZSI6Il9kaXJlY3QiLCJwYWdlIjoicHJvZmlsZSIsInBvc2l0aW9uIjoicGFnZUNvbnRlbnQifX0" target="_blank" rel="noopener noreferrer">
-                        Calculation of stress intensity factor for functionally graded cylinders With two Asymmetrical radial cracks
-                    </a>
-                </h3>
-                <p class="pub-authors">
-                    <strong>S. S. Hejazi Rekavandi</strong>
-                </p>
-                <p class="pub-journal">
-                    > PUBLISHED IN: The 26th Annual International Conference of Iranian Society of Mechanical Engineers (ResearchGate)
-                </p>
-                <div class="pub-metrics">
-                    [ STATUS: VERIFIED | RESEARCHGATE LINK ACTIVE ]
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <footer>
-        <p>SYSTEM SECURE. © 2026 RKV MATERIALS. ENCRYPTED CONNECTION.</p>
-    </footer>
-
-</body>
-</html>
+.pub-link:hover {
+    background-color: #00b8ff;
+    color: #fff;
+    box-shadow: 0 0 10px #00b8ff;
+}
