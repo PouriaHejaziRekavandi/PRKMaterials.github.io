@@ -102,10 +102,8 @@ def initialize_pipeline():
     # Precompute Leadfields and Neighbors
     fwd_gm = mne.convert_forward_solution(fwd, force_fixed=True, surf_ori=True, use_cps=True)
     pos_gm = np.vstack([s['rr'][s['vertno']] for s in fwd_gm['src']]) * 1000
-    neighbors = []
     adj = mne.spatial_src_adjacency(fwd_gm['src']).tocsr()
-    for i in range(adj.shape[0]):
-        neighbors.append(adj.indices[adj.indptr[i]:adj.indptr[i+1]])
+    neighbors = np.split(adj.indices, adj.indptr[1:-1])
 
     # Create the Network once
     net = Net(fwd, model_type='convdip')
@@ -181,7 +179,7 @@ def evaluate_model(net, fwd_test, info_test, sim_settings, pos_gm, neighbors):
 
         # محاسبه AUC
         jt_binary = (np.abs(jt) > 0).astype(int)
-        if len(np.unique(jt_binary)) > 1:
+        if jt_binary.any() and not jt_binary.all():
             # FIXED: Multiplied by 100 to display properly as percentage in the final report
             auc = roc_auc_score(jt_binary, np.abs(jp)) * 100
             auc_l.append(auc)
@@ -261,7 +259,7 @@ def save_and_load_data(y_true, y_pred, mle_l, mse_l, nmse_l, auc_l, found_l):
     # Test loading
     if os.path.exists(save_path):
         logging.info(f"Loading data from {save_path}...\n")
-        with np.load(save_path) as data:
+        with np.load(save_path, allow_pickle=False) as data:
             for key in data.files:
                 arr = data[key]
                 print(f"--- {key} ---")
