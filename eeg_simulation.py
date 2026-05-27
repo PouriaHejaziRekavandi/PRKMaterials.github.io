@@ -21,6 +21,18 @@ from pyvirtualdisplay import Display
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
+# ============================================================
+# Global Configuration
+# ============================================================
+TOTAL_SAMPLES = 2000
+CHUNK_SIZE = 1000
+EPOCHS = 10
+SIM_SETTINGS = {
+    'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
+    'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
+    'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
+}
+
 def setup_environment():
     # Initialize virtual display
     display = Display(visible=0, size=(1366, 768))
@@ -92,28 +104,19 @@ def initialize_pipeline():
     # FIXED: Changed 'oct3' to 'ico4' so the source space dimensions match the training data for MSE calculation
     fwd_test = create_forward_model(info=info_test, sampling='ico4')
 
-    # Simulation settings
-    sim_settings = {
-        'method': 'standard', 'number_of_sources': (1, 6), 'extents': (21, 58),
-        'amplitudes': (5, 10), 'shapes': 'gaussian', 'duration_of_trial': 1.0,
-        'target_snr': (4.5, 4.5), 'beta_noise': (0, 0), 'source_spread': 'region_growing',
-    }
-
     # Precompute Leadfields and Neighbors
     fwd_gm = mne.convert_forward_solution(fwd, force_fixed=True, surf_ori=True, use_cps=True)
     pos_gm = np.vstack([s['rr'][s['vertno']] for s in fwd_gm['src']]) * 1000
-    neighbors = []
     adj = mne.spatial_src_adjacency(fwd_gm['src']).tocsr()
-    for i in range(adj.shape[0]):
-        neighbors.append(adj.indices[adj.indptr[i]:adj.indptr[i+1]])
+    neighbors = np.split(adj.indices, adj.indptr[1:-1])
 
     # Create the Network once
     net = Net(fwd, model_type='convdip')
 
-    return info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net
+    return info, fwd, info_test, fwd_test, pos_gm, neighbors, net
 
 
-def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=2000, chunk_size=1000):
+def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=TOTAL_SAMPLES, chunk_size=CHUNK_SIZE):
     num_chunks = total_samples // chunk_size
 
     os.makedirs(checkpoints_dir, exist_ok=True)
@@ -131,11 +134,25 @@ def train_model(net, fwd, info, sim_settings, checkpoints_dir, total_samples=200
         sim_train.simulate(n_samples=chunk_size)
 
         # 2. Fit the model (weights are preserved across calls)
-        history = net.fit(sim_train, epochs=10, validation_split=0.1)
+        # Monkey-patch net.model.fit to inject a custom callback to capture metrics
+        original_fit = net.model.fit
+        def patched_fit(*args, **kwargs):
+            metrics_callback = tf.keras.callbacks.LambdaCallback(
+                on_epoch_end=lambda epoch, logs: (
+                    all_loss.append(logs.get('loss')),
+                    all_val_loss.append(logs.get('val_loss'))
+                )
+            )
+            callbacks = list(kwargs.get('callbacks') or [])
+            callbacks.append(metrics_callback)
+            kwargs['callbacks'] = callbacks
+            return original_fit(*args, **kwargs)
 
-        if hasattr(history, 'history'):
-            all_loss.extend(history.history.get('loss', []))
-            all_val_loss.extend(history.history.get('val_loss', []))
+        net.model.fit = patched_fit
+        try:
+            net.fit(sim_train, epochs=EPOCHS, validation_split=0.1)
+        finally:
+            net.model.fit = original_fit
 
         # 3. Save progress locally to Drive
         chunk_dir = os.path.join(checkpoints_dir, f'convdip_checkpoint_chunk_{chunk_idx+1}')
@@ -181,7 +198,7 @@ def evaluate_model(net, fwd_test, info_test, sim_settings, pos_gm, neighbors):
 
         # محاسبه AUC
         jt_binary = (np.abs(jt) > 0).astype(int)
-        if len(np.unique(jt_binary)) > 1:
+        if jt_binary.any() and not jt_binary.all():
             # FIXED: Multiplied by 100 to display properly as percentage in the final report
             auc = roc_auc_score(jt_binary, np.abs(jp)) * 100
             auc_l.append(auc)
@@ -261,7 +278,7 @@ def save_and_load_data(y_true, y_pred, mle_l, mse_l, nmse_l, auc_l, found_l):
     # Test loading
     if os.path.exists(save_path):
         logging.info(f"Loading data from {save_path}...\n")
-        with np.load(save_path) as data:
+        with np.load(save_path, allow_pickle=False) as data:
             for key in data.files:
                 arr = data[key]
                 print(f"--- {key} ---")
@@ -276,15 +293,15 @@ def save_and_load_data(y_true, y_pred, mle_l, mse_l, nmse_l, auc_l, found_l):
 def main():
     checkpoints_dir = setup_environment()
 
-    info, fwd, info_test, fwd_test, sim_settings, pos_gm, neighbors, net = initialize_pipeline()
+    info, fwd, info_test, fwd_test, pos_gm, neighbors, net = initialize_pipeline()
 
     all_loss, all_val_loss = train_model(
-        net, fwd, info, sim_settings, checkpoints_dir,
-        total_samples=2000, chunk_size=1000
+        net, fwd, info, SIM_SETTINGS, checkpoints_dir,
+        total_samples=TOTAL_SAMPLES, chunk_size=CHUNK_SIZE
     )
 
     y_true, y_pred, mle_l, found_l, auc_l, mse_l, nmse_l = evaluate_model(
-        net, fwd_test, info_test, sim_settings, pos_gm, neighbors
+        net, fwd_test, info_test, SIM_SETTINGS, pos_gm, neighbors
     )
 
     plot_results(all_loss, all_val_loss, mle_l)
